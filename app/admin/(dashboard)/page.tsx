@@ -61,11 +61,11 @@ export default async function AdminDashboardPage() {
   const stats = await getDashboardStats();
 
   const cards = [
-    { label: "Leads", value: stats.leadCount, href: "/admin/leads" },
-    { label: "Bài blog public", value: stats.blogCount, href: "/admin/blog" },
-    { label: "FAQ", value: stats.faqCount, href: "/admin/faq" },
-    { label: "Bảng giá", value: stats.pricingCount, href: "/admin/pricing" },
-    { label: "Đánh giá", value: stats.testimonialCount, href: "/admin/testimonials" }
+    { label: "Leads", value: stats.leadCount, href: "/admincp/leads" },
+    { label: "Bài blog public", value: stats.blogCount, href: "/admincp/blog" },
+    { label: "FAQ", value: stats.faqCount, href: "/admincp/faq" },
+    { label: "Bảng giá", value: stats.pricingCount, href: "/admincp/pricing" },
+    { label: "Đánh giá", value: stats.testimonialCount, href: "/admincp/testimonials" }
   ];
 
   return (
@@ -95,19 +95,19 @@ export default async function AdminDashboardPage() {
         <h2 className="text-lg font-semibold text-slate-900">Truy cập nhanh</h2>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
-            href="/admin/blog/new"
+            href="/admincp/blog/new"
             className="inline-flex items-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
           >
             Tạo bài blog mới
           </Link>
           <Link
-            href="/admin/blocks"
+            href="/admincp/blocks"
             className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Quản lý blocks trang chủ
           </Link>
           <Link
-            href="/admin/leads"
+            href="/admincp/leads"
             className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Xem danh sách leads

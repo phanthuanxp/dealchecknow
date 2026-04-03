@@ -96,7 +96,7 @@ async function resolveUniqueCode(baseCode: string, currentId?: string) {
 }
 
 function revalidatePricingPaths() {
-  revalidatePath("/admin/pricing", "page");
+  revalidatePath("/admincp/pricing", "page");
   revalidatePath("/", "page");
   revalidatePath("/bang-gia", "page");
 }

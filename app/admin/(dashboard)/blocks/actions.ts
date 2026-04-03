@@ -158,7 +158,7 @@ function parseRawJsonContent(contentJson: string): { content: Record<string, unk
 function revalidateHomeContent() {
   revalidatePath("/", "layout");
   revalidatePath("/", "page");
-  revalidatePath("/admin/blocks", "page");
+  revalidatePath("/admincp/blocks", "page");
 }
 
 async function validateAuthenticatedEditor() {

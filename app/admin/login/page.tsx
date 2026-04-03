@@ -28,7 +28,7 @@ function resolveErrorMessage(errorCode?: string) {
 export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
   const session = await auth();
   if (session?.user) {
-    redirect("/admin");
+    redirect("/admincp");
   }
 
   const params = await searchParams;
@@ -41,22 +41,22 @@ export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
     const password = String(formData.get("password") ?? "");
 
     if (!email || !password) {
-      redirect("/admin/login?error=missing_fields");
+      redirect("/admincp/login?error=missing_fields");
     }
 
     try {
       await signIn("credentials", {
         email,
         password,
-        redirectTo: "/admin"
+        redirectTo: "/admincp"
       });
     } catch (error) {
       if (error instanceof AuthError) {
         if (error.type === "CredentialsSignin") {
-          redirect("/admin/login?error=CredentialsSignin");
+          redirect("/admincp/login?error=CredentialsSignin");
         }
 
-        redirect(`/admin/login?error=${error.type}`);
+        redirect(`/admincp/login?error=${error.type}`);
       }
 
       throw error;

@@ -1,11 +1,18 @@
 import type { NextAuthConfig } from "next-auth";
 
+const authSecret = process.env.AUTH_SECRET?.trim() || process.env.NEXTAUTH_SECRET?.trim();
+const fallbackAuthSecret = "taxininhbinh-change-this-auth-secret-in-vercel-now";
+
+if (!authSecret && process.env.NODE_ENV === "production") {
+  console.warn("AUTH_SECRET chưa được cấu hình. Đang dùng fallback secret tạm thời.");
+}
+
 const authConfig = {
-  secret: process.env.AUTH_SECRET,
+  secret: authSecret || fallbackAuthSecret,
   trustHost: true,
   providers: [],
   pages: {
-    signIn: "/admin/login"
+    signIn: "/admincp/login"
   },
   session: {
     strategy: "jwt",
@@ -14,8 +21,8 @@ const authConfig = {
   callbacks: {
     authorized({ auth, request }) {
       const pathname = request.nextUrl.pathname;
-      const isAdminPath = pathname.startsWith("/admin");
-      const isLoginPath = pathname.startsWith("/admin/login");
+      const isAdminPath = pathname.startsWith("/admin") || pathname.startsWith("/admincp");
+      const isLoginPath = pathname.startsWith("/admin/login") || pathname.startsWith("/admincp/login");
 
       if (!isAdminPath) {
         return true;

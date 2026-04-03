@@ -17,7 +17,7 @@ export default async function AdminDashboardLayout({ children }: AdminDashboardL
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/admin/login");
+    redirect("/admincp/login");
   }
 
   const resolvedRoleLabel = roleLabel[session.user.role] ?? session.user.role;

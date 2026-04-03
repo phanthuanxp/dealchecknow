@@ -98,7 +98,7 @@ async function resolveUniqueSlug(baseSlug: string, currentId?: string) {
 }
 
 function revalidateFaqPaths() {
-  revalidatePath("/admin/faq", "page");
+  revalidatePath("/admincp/faq", "page");
   revalidatePath("/faq", "page");
   revalidatePath("/", "page");
 }

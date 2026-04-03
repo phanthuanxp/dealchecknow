@@ -135,7 +135,7 @@ function BlogRow({ item, disabled }: { item: AdminBlogItem; disabled: boolean })
       <td className="px-4 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href={`/admin/blog/${item.id}/edit`}
+                href={`/admincp/blog/${item.id}/edit`}
             className="inline-flex items-center rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Chỉnh sửa
@@ -161,7 +161,7 @@ export function AdminBlogListManager({ items, databaseReady, filters }: BlogList
       ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <form action="/admin/blog" method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <form action="/admincp/blog" method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm lg:col-span-2">
             <span className="mb-1 block font-medium text-slate-700">Tìm kiếm bài viết</span>
             <input

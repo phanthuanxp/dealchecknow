@@ -104,7 +104,7 @@ export default async function AdminBlogPage({ searchParams }: AdminBlogPageProps
             </p>
           </div>
           <Link
-            href="/admin/blog/new"
+            href="/admincp/blog/new"
             className="inline-flex items-center rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800"
           >
             Tạo bài viết mới

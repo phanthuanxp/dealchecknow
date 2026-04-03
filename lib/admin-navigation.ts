@@ -7,47 +7,47 @@ export type AdminNavItem = {
 export const adminNavItems: AdminNavItem[] = [
   {
     label: "Tổng quan",
-    href: "/admin",
+    href: "/admincp",
     description: "Bảng điều khiển"
   },
   {
     label: "Blog",
-    href: "/admin/blog",
+    href: "/admincp/blog",
     description: "Bài viết"
   },
   {
     label: "Danh mục",
-    href: "/admin/categories",
+    href: "/admincp/categories",
     description: "Phân loại bài viết"
   },
   {
     label: "Leads",
-    href: "/admin/leads",
+    href: "/admincp/leads",
     description: "Yêu cầu báo giá"
   },
   {
     label: "Blocks",
-    href: "/admin/blocks",
+    href: "/admincp/blocks",
     description: "Nội dung trang"
   },
   {
     label: "FAQ",
-    href: "/admin/faq",
+    href: "/admincp/faq",
     description: "Câu hỏi thường gặp"
   },
   {
     label: "Bảng giá",
-    href: "/admin/pricing",
+    href: "/admincp/pricing",
     description: "Tuyến và giá"
   },
   {
     label: "Đánh giá",
-    href: "/admin/testimonials",
+    href: "/admincp/testimonials",
     description: "Phản hồi khách hàng"
   },
   {
     label: "Cài đặt",
-    href: "/admin/settings",
+    href: "/admincp/settings",
     description: "Thiết lập hệ thống"
   }
 ];

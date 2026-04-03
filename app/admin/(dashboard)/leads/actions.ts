@@ -81,8 +81,8 @@ export async function updateLeadStatusAction(
       }
     });
 
-    revalidatePath("/admin/leads", "page");
-    revalidatePath("/admin", "page");
+    revalidatePath("/admincp/leads", "page");
+    revalidatePath("/admincp", "page");
 
     return success("Đã cập nhật trạng thái lead.");
   } catch {

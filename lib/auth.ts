@@ -27,26 +27,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
-        const email = parsedCredentials.data.email.toLowerCase().trim();
-        const user = await prisma.user.findUnique({
-          where: { email }
-        });
-
-        if (!user || !user.isActive) {
+        if (!process.env.DATABASE_URL) {
           return null;
         }
 
-        const passwordMatched = await compare(parsedCredentials.data.password, user.passwordHash);
-        if (!passwordMatched) {
+        try {
+          const email = parsedCredentials.data.email.toLowerCase().trim();
+          const user = await prisma.user.findUnique({
+            where: { email }
+          });
+
+          if (!user || !user.isActive) {
+            return null;
+          }
+
+          const passwordMatched = await compare(parsedCredentials.data.password, user.passwordHash);
+          if (!passwordMatched) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.fullName,
+            role: user.role
+          };
+        } catch {
           return null;
         }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.fullName,
-          role: user.role
-        };
       }
     })
   ],

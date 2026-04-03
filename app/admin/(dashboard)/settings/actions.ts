@@ -217,7 +217,7 @@ export async function updateSiteSettingsAction(
     revalidatePath("/", "layout");
     revalidatePath("/", "page");
     revalidatePath("/lien-he", "page");
-    revalidatePath("/admin/settings", "page");
+    revalidatePath("/admincp/settings", "page");
 
     return success("Đã lưu cài đặt hệ thống.");
   } catch {

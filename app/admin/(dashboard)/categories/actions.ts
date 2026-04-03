@@ -96,9 +96,9 @@ async function resolveUniqueCategorySlug(baseSlug: string, currentId?: string) {
 }
 
 function revalidateCategoryPaths() {
-  revalidatePath("/admin/categories", "page");
-  revalidatePath("/admin/blog", "page");
-  revalidatePath("/admin/blog/new", "page");
+  revalidatePath("/admincp/categories", "page");
+  revalidatePath("/admincp/blog", "page");
+  revalidatePath("/admincp/blog/new", "page");
   revalidatePath("/blog", "page");
 }
 

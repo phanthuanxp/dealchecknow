@@ -10,7 +10,7 @@ type AdminTopbarProps = {
 export function AdminTopbar({ email, roleLabel }: AdminTopbarProps) {
   async function logoutAction() {
     "use server";
-    await signOut({ redirectTo: "/admin/login" });
+    await signOut({ redirectTo: "/admincp/login" });
   }
 
   return (

@@ -141,9 +141,9 @@ function failure(message: string): BlogActionState {
 }
 
 function revalidateBlogPaths(slug?: string, previousSlug?: string) {
-  revalidatePath("/admin/blog", "page");
-  revalidatePath("/admin/blog/new", "page");
-  revalidatePath("/admin/categories", "page");
+  revalidatePath("/admincp/blog", "page");
+  revalidatePath("/admincp/blog/new", "page");
+  revalidatePath("/admincp/categories", "page");
   revalidatePath("/blog", "page");
   if (slug) {
     revalidatePath(`/blog/${slug}`, "page");

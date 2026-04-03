@@ -189,7 +189,7 @@ export function AdminLeadsManager({
       ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <form action="/admin/leads" method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form action="/admincp/leads" method="get" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm lg:col-span-2">
             <span className="mb-1 block font-medium text-slate-700">Tìm kiếm lead</span>
             <input

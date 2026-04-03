@@ -93,7 +93,7 @@ async function resolveUniqueCode(baseCode: string, currentId?: string) {
 }
 
 function revalidateTestimonialPaths() {
-  revalidatePath("/admin/testimonials", "page");
+  revalidatePath("/admincp/testimonials", "page");
   revalidatePath("/", "page");
 }
 
