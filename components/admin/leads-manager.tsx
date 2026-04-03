@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 
 import {
-  INITIAL_LEAD_ACTION_STATE,
   updateLeadStatusAction,
   type LeadActionState
 } from "@/app/admin/(dashboard)/leads/actions";
@@ -51,6 +50,11 @@ type LeadsManagerProps = {
   statusOptions: LeadStatusOption[];
   statusLabelMap: Record<QuoteRequestStatus, string>;
   tripTypeLabelMap: Record<string, string>;
+};
+
+const INITIAL_LEAD_ACTION_STATE: LeadActionState = {
+  status: "idle",
+  message: ""
 };
 
 function StatusBadge({ status, statusLabelMap }: { status: QuoteRequestStatus; statusLabelMap: Record<QuoteRequestStatus, string> }) {

@@ -14,11 +14,6 @@ export type LeadActionState = {
   message: string;
 };
 
-export const INITIAL_LEAD_ACTION_STATE: LeadActionState = {
-  status: "idle",
-  message: ""
-};
-
 const updateLeadStatusSchema = z.object({
   id: z.string().trim().min(1, "ID lead không hợp lệ."),
   status: z.nativeEnum(QuoteRequestStatus)

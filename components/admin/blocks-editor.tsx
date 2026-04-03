@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  INITIAL_BLOCKS_ACTION_STATE,
   updateBlockAction,
   updateSectionAction,
   type BlocksActionState
@@ -15,6 +14,11 @@ import type { HomeBlockEditorField, HomeBlockEditorItem, HomeSectionEditorItem }
 type BlocksEditorProps = {
   sections: HomeSectionEditorItem[];
   databaseReady: boolean;
+};
+
+const INITIAL_BLOCKS_ACTION_STATE: BlocksActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ label, disabled }: { label: string; disabled?: boolean }) {

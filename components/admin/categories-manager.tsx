@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   createCategoryAction,
   deleteCategoryAction,
-  INITIAL_CATEGORY_ACTION_STATE,
   updateCategoryAction,
   type CategoryActionState
 } from "@/app/admin/(dashboard)/categories/actions";
@@ -26,6 +25,11 @@ type CategoryItem = {
 type CategoriesManagerProps = {
   items: CategoryItem[];
   databaseReady: boolean;
+};
+
+const INITIAL_CATEGORY_ACTION_STATE: CategoryActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ label, disabled }: { label: string; disabled?: boolean }) {

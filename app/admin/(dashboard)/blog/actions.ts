@@ -14,11 +14,6 @@ export type BlogActionState = {
   message: string;
 };
 
-export const INITIAL_BLOG_ACTION_STATE: BlogActionState = {
-  status: "idle",
-  message: ""
-};
-
 const blogSchema = z.object({
   title: z.string().trim().min(6, "Tiêu đề phải có ít nhất 6 ký tự.").max(220, "Tiêu đề quá dài."),
   slug: z.string().trim().max(180, "Slug quá dài."),

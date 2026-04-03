@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   createFaqAction,
   deleteFaqAction,
-  INITIAL_FAQ_ACTION_STATE,
   updateFaqAction,
   type FaqActionState
 } from "@/app/admin/(dashboard)/faq/actions";
@@ -25,6 +24,11 @@ type FaqItem = {
 type FaqManagerProps = {
   items: FaqItem[];
   databaseReady: boolean;
+};
+
+const INITIAL_FAQ_ACTION_STATE: FaqActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ label, disabled }: { label: string; disabled?: boolean }) {

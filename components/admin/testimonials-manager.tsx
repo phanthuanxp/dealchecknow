@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   createTestimonialAction,
   deleteTestimonialAction,
-  INITIAL_TESTIMONIAL_ACTION_STATE,
   updateTestimonialAction,
   type TestimonialActionState
 } from "@/app/admin/(dashboard)/testimonials/actions";
@@ -29,6 +28,11 @@ type TestimonialItem = {
 type TestimonialsManagerProps = {
   items: TestimonialItem[];
   databaseReady: boolean;
+};
+
+const INITIAL_TESTIMONIAL_ACTION_STATE: TestimonialActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ label, disabled }: { label: string; disabled?: boolean }) {

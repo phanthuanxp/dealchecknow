@@ -14,11 +14,6 @@ export type TestimonialActionState = {
   message: string;
 };
 
-export const INITIAL_TESTIMONIAL_ACTION_STATE: TestimonialActionState = {
-  status: "idle",
-  message: ""
-};
-
 const testimonialSchema = z.object({
   code: z
     .string()

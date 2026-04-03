@@ -6,7 +6,6 @@ import { useFormStatus } from "react-dom";
 import {
   createPricingAction,
   deletePricingAction,
-  INITIAL_PRICING_ACTION_STATE,
   updatePricingAction,
   type PricingActionState
 } from "@/app/admin/(dashboard)/pricing/actions";
@@ -32,6 +31,11 @@ type PricingItem = {
 type PricingManagerProps = {
   items: PricingItem[];
   databaseReady: boolean;
+};
+
+const INITIAL_PRICING_ACTION_STATE: PricingActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ label, disabled }: { label: string; disabled?: boolean }) {

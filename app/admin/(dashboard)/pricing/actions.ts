@@ -14,11 +14,6 @@ export type PricingActionState = {
   message: string;
 };
 
-export const INITIAL_PRICING_ACTION_STATE: PricingActionState = {
-  status: "idle",
-  message: ""
-};
-
 const pricingSchema = z.object({
   code: z
     .string()

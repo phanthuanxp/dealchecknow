@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  INITIAL_SETTINGS_ACTION_STATE,
   updateSiteSettingsAction,
   type SettingsActionState
 } from "@/app/admin/(dashboard)/settings/actions";
@@ -23,6 +22,11 @@ type SettingsFormData = {
 type AdminSettingsFormProps = {
   defaultValues: SettingsFormData;
   databaseReady: boolean;
+};
+
+const INITIAL_SETTINGS_ACTION_STATE: SettingsActionState = {
+  status: "idle",
+  message: ""
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {

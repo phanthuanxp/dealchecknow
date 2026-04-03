@@ -15,11 +15,6 @@ export type BlocksActionState = {
   message: string;
 };
 
-export const INITIAL_BLOCKS_ACTION_STATE: BlocksActionState = {
-  status: "idle",
-  message: ""
-};
-
 const sectionKeySchema = z
   .string()
   .trim()

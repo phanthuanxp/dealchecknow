@@ -14,11 +14,6 @@ export type CategoryActionState = {
   message: string;
 };
 
-export const INITIAL_CATEGORY_ACTION_STATE: CategoryActionState = {
-  status: "idle",
-  message: ""
-};
-
 const categorySchema = z.object({
   name: z.string().trim().min(2, "Tên danh mục phải có ít nhất 2 ký tự.").max(120, "Tên danh mục quá dài."),
   slug: z

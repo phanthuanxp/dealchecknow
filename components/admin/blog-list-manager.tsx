@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 
 import {
   deleteBlogPostAction,
-  INITIAL_BLOG_ACTION_STATE,
   type BlogActionState
 } from "@/app/admin/(dashboard)/blog/actions";
 import { cn } from "@/lib/utils";
@@ -33,6 +32,11 @@ type BlogListManagerProps = {
     status: BlogStatusFilter;
     keyword: string;
   };
+};
+
+const INITIAL_BLOG_ACTION_STATE: BlogActionState = {
+  status: "idle",
+  message: ""
 };
 
 const statusLabelMap: Record<PublishStatus, string> = {

@@ -5,7 +5,6 @@ import { useActionState, useRef, useState } from "react";
 
 import {
   createBlogPostAction,
-  INITIAL_BLOG_ACTION_STATE,
   updateBlogPostAction,
   type BlogActionState
 } from "@/app/admin/(dashboard)/blog/actions";
@@ -36,6 +35,11 @@ type AdminBlogEditorFormProps = {
   categories: CategoryOption[];
   initialData: BlogEditorInitialData;
   databaseReady: boolean;
+};
+
+const INITIAL_BLOG_ACTION_STATE: BlogActionState = {
+  status: "idle",
+  message: ""
 };
 
 function ActionNotice({ state }: { state: BlogActionState }) {

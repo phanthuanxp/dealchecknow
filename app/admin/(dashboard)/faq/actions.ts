@@ -14,11 +14,6 @@ export type FaqActionState = {
   message: string;
 };
 
-export const INITIAL_FAQ_ACTION_STATE: FaqActionState = {
-  status: "idle",
-  message: ""
-};
-
 const faqSchema = z.object({
   slug: z
     .string()

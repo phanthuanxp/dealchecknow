@@ -14,11 +14,6 @@ export type SettingsActionState = {
   message: string;
 };
 
-export const INITIAL_SETTINGS_ACTION_STATE: SettingsActionState = {
-  status: "idle",
-  message: ""
-};
-
 const settingsSchema = z.object({
   siteName: z.string().trim().min(2, "Tên website phải có ít nhất 2 ký tự.").max(120, "Tên website quá dài."),
   siteDomain: z
