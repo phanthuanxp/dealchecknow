@@ -50,7 +50,8 @@ export default async function ServicesPage() {
           Danh sách dịch vụ taxi Ninh Bình theo từng tuyến thực tế
         </h1>
         <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-700 sm:text-base">
-          Chọn đúng tuyến bạn cần để xem chi tiết điểm đón/trả, giá tham khảo theo loại xe, câu hỏi thường gặp và nút liên hệ đặt xe ngay.
+          Chọn đúng tuyến bạn cần để xem chi tiết điểm đón/trả, giá tham khảo theo loại xe, câu hỏi thường gặp và nút liên
+          hệ đặt xe ngay.
         </p>
       </section>
 
@@ -58,32 +59,37 @@ export default async function ServicesPage() {
         {services.map((service) => (
           <article
             key={service.slug}
-            className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md"
+            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-200 hover:shadow-md"
           >
-            <div className="relative w-full overflow-hidden rounded-xl border border-slate-200">
-              <Image
-                src={service.featuredImage || fallbackImage}
-                alt={service.title}
-                width={960}
-                height={540}
-                className="aspect-[16/9] w-full object-cover"
-              />
-            </div>
-
-            <h2 className="mt-4 text-lg font-semibold leading-snug text-slate-900">{service.title}</h2>
-            <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-600">{service.shortDescription}</p>
-
-            <div className="mt-3">
-              <p className="inline-flex rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
-                Tuyến SEO: {service.keyword}
-              </p>
-            </div>
-
             <Link
               href={service.href}
-              className="mt-4 inline-flex w-fit items-center rounded-lg bg-teal-700 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-teal-800"
+              className="group flex h-full flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2"
+              aria-label={`Xem chi tiết dịch vụ ${service.title}`}
             >
-              Xem chi tiết và đặt xe
+              <div className="relative w-full overflow-hidden rounded-xl border border-slate-200">
+                <Image
+                  src={service.featuredImage || fallbackImage}
+                  alt={service.title}
+                  width={960}
+                  height={540}
+                  className="aspect-[16/9] w-full object-cover transition duration-200 group-hover:scale-[1.01]"
+                />
+              </div>
+
+              <h2 className="mt-4 text-lg font-semibold leading-snug text-slate-900 transition group-hover:text-teal-700">
+                {service.title}
+              </h2>
+              <p className="mt-2 line-clamp-4 text-sm leading-6 text-slate-600">{service.shortDescription}</p>
+
+              <div className="mt-3">
+                <p className="inline-flex rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
+                  Tuyến SEO: {service.keyword}
+                </p>
+              </div>
+
+              <span className="mt-4 inline-flex w-fit items-center rounded-lg bg-teal-700 px-3.5 py-2 text-sm font-semibold text-white transition group-hover:bg-teal-800">
+                Xem chi tiết và đặt xe
+              </span>
             </Link>
           </article>
         ))}
