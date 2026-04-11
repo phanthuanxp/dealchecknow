@@ -293,19 +293,18 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
       </section>
 
       <section className="mt-6">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900 sm:text-xl">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 md:hidden">
+          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
             <MapPinIcon className="h-5 w-5 text-teal-700" />
             Điểm đón và điểm trả phổ biến
           </h2>
-
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="mt-3 grid gap-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <h3 className="text-sm font-semibold text-slate-900">Điểm đón phổ biến</h3>
               <ul className="mt-2 grid gap-2 text-sm text-slate-700">
                 {pickupLocations.map((point) => (
                   <li
-                    key={`${service.id}-pickup-${point}`}
+                    key={`${service.id}-pickup-mobile-${point}`}
                     className="rounded-lg border border-slate-200 bg-white px-3 py-2"
                   >
                     {point}
@@ -313,13 +312,12 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
                 ))}
               </ul>
             </div>
-
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <h3 className="text-sm font-semibold text-slate-900">Điểm trả phổ biến</h3>
               <ul className="mt-2 grid gap-2 text-sm text-slate-700">
                 {dropoffLocations.map((point) => (
                   <li
-                    key={`${service.id}-dropoff-${point}`}
+                    key={`${service.id}-dropoff-mobile-${point}`}
                     className="rounded-lg border border-slate-200 bg-white px-3 py-2"
                   >
                     {point}
@@ -329,6 +327,36 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
             </div>
           </div>
         </article>
+
+        <div className="hidden gap-4 md:grid lg:grid-cols-2">
+          <article className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <MapPinIcon className="h-5 w-5 text-teal-700" />
+              Điểm đón phổ biến
+            </h2>
+            <ul className="mt-3 grid gap-2 text-sm text-slate-700">
+              {pickupLocations.map((point) => (
+                <li key={`${service.id}-pickup-${point}`} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </article>
+
+          <article className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+              <MapPinIcon className="h-5 w-5 text-teal-700" />
+              Điểm trả phổ biến
+            </h2>
+            <ul className="mt-3 grid gap-2 text-sm text-slate-700">
+              {dropoffLocations.map((point) => (
+                <li key={`${service.id}-dropoff-${point}`} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </article>
+        </div>
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
