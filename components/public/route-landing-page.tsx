@@ -292,33 +292,42 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
         </div>
       </section>
 
-      <section className="mt-6 grid gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
+      <section className="mt-6">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900 sm:text-xl">
             <MapPinIcon className="h-5 w-5 text-teal-700" />
-            Điểm đón phổ biến
+            Điểm đón và điểm trả phổ biến
           </h2>
-          <ul className="mt-3 grid gap-2 text-sm text-slate-700">
-            {pickupLocations.map((point) => (
-              <li key={`${service.id}-pickup-${point}`} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                {point}
-              </li>
-            ))}
-          </ul>
-        </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
-            <MapPinIcon className="h-5 w-5 text-teal-700" />
-            Điểm trả phổ biến
-          </h2>
-          <ul className="mt-3 grid gap-2 text-sm text-slate-700">
-            {dropoffLocations.map((point) => (
-              <li key={`${service.id}-dropoff-${point}`} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                {point}
-              </li>
-            ))}
-          </ul>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <h3 className="text-sm font-semibold text-slate-900">Điểm đón phổ biến</h3>
+              <ul className="mt-2 grid gap-2 text-sm text-slate-700">
+                {pickupLocations.map((point) => (
+                  <li
+                    key={`${service.id}-pickup-${point}`}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2"
+                  >
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <h3 className="text-sm font-semibold text-slate-900">Điểm trả phổ biến</h3>
+              <ul className="mt-2 grid gap-2 text-sm text-slate-700">
+                {dropoffLocations.map((point) => (
+                  <li
+                    key={`${service.id}-dropoff-${point}`}
+                    className="rounded-lg border border-slate-200 bg-white px-3 py-2"
+                  >
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </article>
       </section>
 
@@ -330,8 +339,18 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
             <p className="text-emerald-700">👉 Gọi ngay để nhận được báo giá tốt nhất</p>
           </div>
 
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[460px] border-collapse text-sm">
+          <div className="mt-3 space-y-2 md:hidden">
+            {pricingRows.map((item) => (
+              <div key={`${service.id}-pricing-mobile-${item.vehicle}`} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-sm font-semibold text-slate-900">{item.vehicle}</p>
+                <p className="mt-1 text-base font-bold text-teal-700">{item.price}</p>
+                <p className="mt-1 text-xs text-slate-600">{item.note || "Liên hệ để xác nhận chi tiết"}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 hidden md:block overflow-x-auto">
+            <table className="w-full min-w-[560px] border-collapse text-sm">
               <thead>
                 <tr>
                   <th className="border border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-800">Loại xe</th>
