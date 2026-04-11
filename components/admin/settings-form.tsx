@@ -17,6 +17,8 @@ type SettingsFormData = {
   hotlineDisplay: string;
   email: string;
   zaloNumber: string;
+  servicePricingImageUrl: string;
+  servicePricingImageAlt: string;
 };
 
 type AdminSettingsFormProps = {
@@ -92,7 +94,7 @@ export function AdminSettingsForm({ defaultValues, databaseReady }: AdminSetting
               />
             </label>
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Domain</span>
+              <span className="mb-1 block font-medium text-slate-700">Tên miền</span>
               <input
                 name="siteDomain"
                 defaultValue={defaultValues.siteDomain}
@@ -104,7 +106,7 @@ export function AdminSettingsForm({ defaultValues, databaseReady }: AdminSetting
           </div>
 
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Tagline</span>
+            <span className="mb-1 block font-medium text-slate-700">Khẩu hiệu</span>
             <input
               name="siteTagline"
               defaultValue={defaultValues.siteTagline}
@@ -154,6 +156,36 @@ export function AdminSettingsForm({ defaultValues, databaseReady }: AdminSetting
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
               />
             </label>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">Anh minh hoa bang gia trang dich vu</h3>
+            <p className="mt-1 text-xs text-slate-600">
+              Upload anh tai <span className="font-semibold">/admincp/media</span>, sau do dan URL vao day de hien thi o cot
+              anh ben phai block "Bang gia tham khao theo loai xe" tren tat ca trang dich vu.
+            </p>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">URL anh bang gia dich vu</span>
+                <input
+                  name="servicePricingImageUrl"
+                  type="url"
+                  defaultValue={defaultValues.servicePricingImageUrl}
+                  placeholder="https://..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                />
+              </label>
+              <label className="text-sm">
+                <span className="mb-1 block font-medium text-slate-700">Mo ta anh (ALT)</span>
+                <input
+                  name="servicePricingImageAlt"
+                  defaultValue={defaultValues.servicePricingImageAlt}
+                  placeholder="Anh xe taxi phuc vu chuyen tuyen..."
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                />
+              </label>
+            </div>
           </div>
 
           <SubmitButton disabled={!databaseReady} />

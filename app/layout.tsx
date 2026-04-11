@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: `${siteUrl}/opengraph-image.png`
+        url: `${siteUrl}/opengraph-image.svg`
       }
     ]
   },
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: "Taxi Ninh Bình",
     description:
       "Dịch vụ taxi và xe du lịch Ninh Bình an toàn, đúng giờ, hỗ trợ 24/7.",
-    images: [`${siteUrl}/opengraph-image.png`]
+    images: [`${siteUrl}/opengraph-image.svg`]
   }
 };
 

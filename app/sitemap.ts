@@ -2,13 +2,12 @@ import type { MetadataRoute } from "next";
 
 import { getPublishedBlogPosts } from "@/lib/blog-queries";
 import { getBaseSiteUrl } from "@/lib/seo";
+import { getServiceSlugsForSitemap } from "@/lib/services";
 
 const staticPaths = [
   "/",
   "/gioi-thieu",
   "/dich-vu",
-  "/dich-vu/taxi-ninh-binh-di-ha-noi",
-  "/dich-vu/taxi-ninh-binh-di-san-bay-noi-bai",
   "/dich-vu/taxi-duong-dai",
   "/dich-vu/thue-xe-du-lich",
   "/bang-gia",
@@ -30,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "/" ? 1 : 0.7
   }));
 
-  const posts = await getPublishedBlogPosts();
+  const [posts, serviceSlugs] = await Promise.all([getPublishedBlogPosts(), getServiceSlugsForSitemap()]);
   const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,
     lastModified: new Date(post.publishedAt ?? post.createdAt),
@@ -38,5 +37,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6
   }));
 
-  return [...staticEntries, ...blogEntries];
+  const serviceEntries: MetadataRoute.Sitemap = serviceSlugs.map((item) => ({
+    url: `${siteUrl}/${item.slug}`,
+    lastModified: new Date(item.updatedAt),
+    changeFrequency: "weekly",
+    priority: 0.8
+  }));
+
+  return [...staticEntries, ...serviceEntries, ...blogEntries];
 }

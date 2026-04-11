@@ -42,16 +42,16 @@ export default async function AdminBlogNewPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Tạo bài blog mới</h1>
+            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Tạo bài viết mới</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Soạn nội dung chuẩn SEO, chọn danh mục và thiết lập trạng thái draft/published.
+              Soạn nội dung chuẩn SEO, chọn danh mục và thiết lập trạng thái bản nháp hoặc đã xuất bản.
             </p>
           </div>
           <Link
             href="/admincp/blog"
             className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Quay lại danh sách blog
+            Quay lại danh sách bài viết
           </Link>
         </div>
       </section>

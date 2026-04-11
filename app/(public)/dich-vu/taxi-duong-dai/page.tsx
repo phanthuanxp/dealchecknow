@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
@@ -38,23 +39,52 @@ export default async function TaxiDuongDaiPage() {
           Chuyên tuyến liên tỉnh cho khách gia đình, khách công tác và nhóm du lịch cần xe riêng. Lịch trình được tư
           vấn chi tiết theo thời gian đi, điểm dừng và số lượng hành khách.
         </p>
+        <Image
+          src="/images/cover-duong-dai.svg"
+          alt="Taxi đường dài từ Ninh Bình đi các tỉnh"
+          width={1200}
+          height={630}
+          className="mt-5 h-44 w-full rounded-2xl border border-teal-100 object-cover sm:h-56"
+          priority
+        />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Tư vấn lộ trình</h2>
+          <Image
+            src="/images/cover-service-overview.svg"
+            alt="Tư vấn lộ trình taxi đường dài"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Tư vấn lộ trình</h2>
           <p className="mt-2 text-sm text-slate-600">
             Hỗ trợ gợi ý cung đường và khung giờ xuất phát để tối ưu thời gian di chuyển.
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Chủ động điểm dừng</h2>
+          <Image
+            src="/images/car-tour.svg"
+            alt="Taxi đường dài có thể dừng nghỉ theo nhu cầu"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Chủ động điểm dừng</h2>
           <p className="mt-2 text-sm text-slate-600">
             Có thể bố trí dừng nghỉ hợp lý theo nhu cầu thực tế của hành khách.
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Cam kết an toàn</h2>
+          <Image
+            src="/images/car-suv.svg"
+            alt="Taxi đường dài an toàn với tài xế kinh nghiệm"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Cam kết an toàn</h2>
           <p className="mt-2 text-sm text-slate-600">
             Lái xe giàu kinh nghiệm đường dài, thái độ lịch sự và hỗ trợ tận tình.
           </p>

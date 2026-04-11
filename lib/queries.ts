@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { getPublicPricingItems } from "@/lib/public-content";
 import prisma from "@/lib/prisma";
 
 type HomeSectionKey =
@@ -26,6 +27,11 @@ type HomeSectionWithBlocks = {
   }>;
 };
 
+export type HeroBannerImage = {
+  src: string;
+  alt: string;
+};
+
 export type HeroData = {
   badge: string;
   title: string;
@@ -33,6 +39,7 @@ export type HeroData = {
   primaryCtaText: string;
   secondaryCtaText: string;
   highlights: string[];
+  bannerImages: HeroBannerImage[];
 };
 
 export type QuoteSectionData = {
@@ -44,6 +51,8 @@ export type QuoteSectionData = {
 export type ServiceItem = {
   title: string;
   description: string;
+  imageUrl?: string;
+  iconKey?: string;
 };
 
 export type GenericSectionWithItems = {
@@ -67,6 +76,7 @@ export type PricingData = {
     unit: string;
     description: string | null;
     isPopular: boolean;
+    showOnHome: boolean;
   }>;
 };
 
@@ -124,6 +134,20 @@ const fallbackHomePageData: HomePageData = {
       "Có mặt nhanh trong khu vực Ninh Bình",
       "Giá minh bạch trước chuyến đi",
       "Hỗ trợ hotline và Zalo 24/7"
+    ],
+    bannerImages: [
+      {
+        src: "/images/taxi-banner-1.svg",
+        alt: "Taxi phục vụ khách du lịch tại Ninh Bình"
+      },
+      {
+        src: "/images/taxi-banner-2.svg",
+        alt: "Xe đưa đón tuyến Ninh Bình đi sân bay Nội Bài"
+      },
+      {
+        src: "/images/taxi-banner-3.svg",
+        alt: "Taxi đường dài và xe đoàn tại Ninh Bình"
+      }
     ]
   },
   quote: {
@@ -137,34 +161,106 @@ const fallbackHomePageData: HomePageData = {
     items: [
       {
         title: "Taxi nội tỉnh Ninh Bình",
-        description: "Đón nhanh tại trung tâm, khách sạn, ga tàu và điểm du lịch."
+        description: "Đón nhanh tại trung tâm, khách sạn, ga tàu và điểm du lịch.",
+        imageUrl: "/images/services/service-ha-noi.webp",
+        iconKey: "car"
       },
       {
         title: "Đưa đón sân bay",
-        description: "Linh hoạt thời gian, hỗ trợ hành lý và theo dõi lịch bay."
+        description: "Linh hoạt thời gian, hỗ trợ hành lý và theo dõi lịch bay.",
+        imageUrl: "/images/services/service-noi-bai.jpg",
+        iconKey: "route"
       },
       {
         title: "Xe du lịch theo chuyến",
-        description: "Phù hợp lịch trình Tam Cốc, Tràng An, Bái Đính, Hoa Lư."
+        description: "Phù hợp lịch trình Tam Cốc, Tràng An, Bái Đính, Hoa Lư.",
+        imageUrl: "/images/services/service-tour.jpg",
+        iconKey: "star"
       }
     ]
   },
   pricing: {
     title: "Tuyến phổ biến / Bảng giá tham khảo",
     description: "Giá tham khảo cho một số lộ trình thường dùng.",
-    note: "Giá thực tế có thể thay đổi theo thời điểm và yêu cầu cụ thể.",
+    note: "Cam kết 100% xe riêng đời mới - Phục vụ 24/24 !",
     items: [
       {
         id: "fallback-price-1",
-        routeName: "Ninh Bình City → Tam Cốc",
-        fromLocation: "Ninh Bình City",
+        routeName: "TP Ninh Bình → Tam Cốc",
+        fromLocation: "TP Ninh Bình",
         toLocation: "Tam Cốc",
         vehicleType: "Sedan 4 chỗ",
         price: 200000,
         currency: "VND",
-        unit: "trip",
-        description: "Đón tận nơi, trả tận điểm du lịch",
-        isPopular: true
+        unit: "chuyến",
+        description: "Đón tận nơi, phù hợp khách lẻ và gia đình.",
+        isPopular: true,
+        showOnHome: true
+      },
+      {
+        id: "fallback-price-2",
+        routeName: "TP Ninh Bình → Tràng An",
+        fromLocation: "TP Ninh Bình",
+        toLocation: "Tràng An",
+        vehicleType: "SUV 7 chỗ",
+        price: 300000,
+        currency: "VND",
+        unit: "chuyến",
+        description: "Xe rộng rãi, phù hợp nhóm bạn và gia đình có trẻ nhỏ.",
+        isPopular: true,
+        showOnHome: true
+      },
+      {
+        id: "fallback-price-3",
+        routeName: "Ninh Bình → Sân bay Nội Bài",
+        fromLocation: "Ninh Bình",
+        toLocation: "Sân bay Nội Bài",
+        vehicleType: "Sedan 4 chỗ",
+        price: 1300000,
+        currency: "VND",
+        unit: "chuyến",
+        description: "Theo dõi giờ bay, hỗ trợ đón sớm và chuyến đêm.",
+        isPopular: true,
+        showOnHome: true
+      },
+      {
+        id: "fallback-price-4",
+        routeName: "TP Ninh Bình → TP Hà Nội",
+        fromLocation: "TP Ninh Bình",
+        toLocation: "TP Hà Nội",
+        vehicleType: "Sedan 4 chỗ",
+        price: 1150000,
+        currency: "VND",
+        unit: "chuyến",
+        description: "Đi công tác và khám chữa bệnh, lộ trình linh hoạt.",
+        isPopular: true,
+        showOnHome: true
+      },
+      {
+        id: "fallback-price-5",
+        routeName: "TP Ninh Bình → Bái Đính",
+        fromLocation: "TP Ninh Bình",
+        toLocation: "Bái Đính",
+        vehicleType: "Sedan 4 chỗ",
+        price: 350000,
+        currency: "VND",
+        unit: "chuyến",
+        description: "Thuận tiện cho lịch trình tham quan trong ngày.",
+        isPopular: false,
+        showOnHome: true
+      },
+      {
+        id: "fallback-price-6",
+        routeName: "TP Ninh Bình → Hang Múa",
+        fromLocation: "TP Ninh Bình",
+        toLocation: "Hang Múa",
+        vehicleType: "Sedan 4 chỗ",
+        price: 280000,
+        currency: "VND",
+        unit: "chuyến",
+        description: "Phù hợp khách chụp ảnh, tham quan ngắn giờ.",
+        isPopular: true,
+        showOnHome: true
       }
     ]
   },
@@ -174,15 +270,18 @@ const fallbackHomePageData: HomePageData = {
     items: [
       {
         title: "Đón đúng giờ",
-        description: "Xác nhận và theo dõi lịch trình để đảm bảo đúng kế hoạch."
+        description: "Xác nhận và theo dõi lịch trình để đảm bảo đúng kế hoạch.",
+        iconKey: "clock"
       },
       {
         title: "Xe sạch, tài xế lịch sự",
-        description: "Trải nghiệm thoải mái cho khách cá nhân và gia đình."
+        description: "Trải nghiệm thoải mái cho khách cá nhân và gia đình.",
+        iconKey: "shield"
       },
       {
         title: "Giá rõ ràng",
-        description: "Tư vấn chi phí trước chuyến, không phát sinh bất ngờ."
+        description: "Tư vấn chi phí trước chuyến, không phát sinh bất ngờ.",
+        iconKey: "check"
       }
     ]
   },
@@ -232,7 +331,21 @@ function textFromRecord(record: Record<string, unknown> | null, key = "text"): s
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function textFromBlock(block: HomeSectionWithBlocks["blocks"][number] | undefined, key = "text") {
+function listFromRecord(record: Record<string, unknown> | null, key: string): string[] {
+  const value = record?.[key];
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item.length > 0);
+}
+
+function textFromBlock(
+  block: HomeSectionWithBlocks["blocks"][number] | undefined,
+  key = "text"
+) {
   if (!block) {
     return undefined;
   }
@@ -277,10 +390,7 @@ export async function getHomePageData(): Promise<HomePageData> {
           }
         }
       }),
-      prisma.pricingItem.findMany({
-        where: { isActive: true },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
-      }),
+      getPublicPricingItems({ onlyHome: true }),
       prisma.faq.findMany({
         where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
@@ -308,9 +418,13 @@ export async function getHomePageData(): Promise<HomePageData> {
     const serviceItemsFromSql = (serviceSection?.blocks ?? [])
       .map((block) => {
         const record = asRecord(block.content);
+        const iconKey = textFromRecord(record, "iconKey");
+
         return {
           title: textFromRecord(record, "title") ?? block.title ?? "",
-          description: textFromRecord(record, "description") ?? ""
+          description: textFromRecord(record, "description") ?? "",
+          imageUrl: textFromRecord(record, "imageUrl"),
+          iconKey: iconKey ? iconKey.toLowerCase() : undefined
         };
       })
       .filter((item) => item.title && item.description);
@@ -318,9 +432,12 @@ export async function getHomePageData(): Promise<HomePageData> {
     const whyUsItemsFromSql = (whyUsSection?.blocks ?? [])
       .map((block) => {
         const record = asRecord(block.content);
+        const iconKey = textFromRecord(record, "iconKey");
+
         return {
           title: textFromRecord(record, "title") ?? block.title ?? "",
-          description: textFromRecord(record, "description") ?? ""
+          description: textFromRecord(record, "description") ?? "",
+          iconKey: iconKey ? iconKey.toLowerCase() : undefined
         };
       })
       .filter((item) => item.title && item.description);
@@ -328,6 +445,29 @@ export async function getHomePageData(): Promise<HomePageData> {
     const heroHighlights = blocksByPrefix(heroSection, "hero-highlight-")
       .map((block) => textFromBlock(block))
       .filter((text): text is string => Boolean(text));
+
+    const heroBannerBlock = blockByKey(heroSection, "hero-banner-images");
+    const heroBannerRecord = asRecord(heroBannerBlock?.content);
+    const bannerAlt =
+      textFromRecord(heroBannerRecord, "alt") ?? fallbackHomePageData.hero.bannerImages[0]?.alt ?? "Taxi Ninh Bình";
+    const heroBannerImages = listFromRecord(heroBannerRecord, "images").map((src) => ({
+      src,
+      alt: bannerAlt
+    }));
+
+    const pricingItemsFromSql: PricingData["items"] = pricingItems.map((item) => ({
+      id: item.id,
+      routeName: item.routeName,
+      fromLocation: item.fromLocation,
+      toLocation: item.toLocation,
+      vehicleType: item.vehicleType,
+      price: Number(item.price),
+      currency: item.currency,
+      unit: item.unit,
+      description: item.description,
+      isPopular: item.isPopular,
+      showOnHome: item.showOnHome
+    }));
 
     return {
       hero: {
@@ -350,7 +490,9 @@ export async function getHomePageData(): Promise<HomePageData> {
           textFromBlock(blockByKey(heroSection, "hero-secondary-cta"), "label") ??
           fallbackHomePageData.hero.secondaryCtaText,
         highlights:
-          heroHighlights.length > 0 ? heroHighlights : fallbackHomePageData.hero.highlights
+          heroHighlights.length > 0 ? heroHighlights : fallbackHomePageData.hero.highlights,
+        bannerImages:
+          heroBannerImages.length > 0 ? heroBannerImages : fallbackHomePageData.hero.bannerImages
       },
       quote: {
         title: quoteSection?.title ?? fallbackHomePageData.quote.title,
@@ -362,7 +504,9 @@ export async function getHomePageData(): Promise<HomePageData> {
         title: serviceSection?.title ?? fallbackHomePageData.services.title,
         description: serviceSection?.description ?? fallbackHomePageData.services.description,
         items:
-          serviceItemsFromSql.length > 0 ? serviceItemsFromSql : fallbackHomePageData.services.items
+          serviceItemsFromSql.length > 0
+            ? serviceItemsFromSql
+            : fallbackHomePageData.services.items
       },
       pricing: {
         title: pricingSection?.title ?? fallbackHomePageData.pricing.title,
@@ -370,26 +514,13 @@ export async function getHomePageData(): Promise<HomePageData> {
         note:
           textFromBlock(blockByKey(pricingSection, "pricing-note")) ??
           fallbackHomePageData.pricing.note,
-        items:
-          pricingItems.length > 0
-            ? pricingItems.map((item) => ({
-                id: item.id,
-                routeName: item.routeName,
-                fromLocation: item.fromLocation,
-                toLocation: item.toLocation,
-                vehicleType: item.vehicleType,
-                price: Number(item.price),
-                currency: item.currency,
-                unit: item.unit,
-                description: item.description,
-                isPopular: item.isPopular
-              }))
-            : fallbackHomePageData.pricing.items
+        items: pricingItemsFromSql.length > 0 ? pricingItemsFromSql : fallbackHomePageData.pricing.items
       },
       whyUs: {
         title: whyUsSection?.title ?? fallbackHomePageData.whyUs.title,
         description: whyUsSection?.description ?? fallbackHomePageData.whyUs.description,
-        items: whyUsItemsFromSql.length > 0 ? whyUsItemsFromSql : fallbackHomePageData.whyUs.items
+        items:
+          whyUsItemsFromSql.length > 0 ? whyUsItemsFromSql : fallbackHomePageData.whyUs.items
       },
       testimonials: {
         title: testimonialSection?.title ?? fallbackHomePageData.testimonials.title,

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
@@ -30,6 +31,13 @@ export default async function TermsOfUsePage() {
         <p className="mt-3 text-sm text-slate-600">
           Khi sử dụng website và đặt dịch vụ tại Taxi Ninh Bình, bạn đồng ý với các điều khoản dưới đây.
         </p>
+        <Image
+          src="/images/cover-about.svg"
+          alt="Điều khoản sử dụng dịch vụ Taxi Ninh Bình"
+          width={1000}
+          height={520}
+          className="mt-4 h-40 w-full rounded-xl border border-slate-200 object-cover sm:h-48"
+        />
       </section>
 
       <section className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">

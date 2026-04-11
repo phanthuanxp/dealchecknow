@@ -31,7 +31,7 @@ const blockKeySchema = z
 
 const sectionFormSchema = z.object({
   sectionKey: sectionKeySchema,
-  title: z.string().trim().min(2, "Tiêu đề section cần ít nhất 2 ký tự.").max(200, "Tiêu đề quá dài."),
+  title: z.string().trim().min(2, "Tiêu đề mục cần ít nhất 2 ký tự.").max(200, "Tiêu đề mục quá dài."),
   description: z.string().trim().max(3000, "Mô tả quá dài."),
   isActive: z.boolean()
 });
@@ -39,10 +39,15 @@ const sectionFormSchema = z.object({
 const blockFormSchema = z.object({
   sectionKey: sectionKeySchema,
   blockKey: blockKeySchema,
-  title: z.string().trim().max(200, "Tiêu đề block quá dài."),
+  title: z.string().trim().max(200, "Tiêu đề khối quá dài."),
   sortOrder: z.coerce.number().int().min(-999).max(9999),
   isActive: z.boolean(),
   blockType: z.string().trim().min(1).max(60)
+});
+
+const layoutRowSchema = z.object({
+  sectionKey: sectionKeySchema,
+  blocks: z.array(blockKeySchema).max(300)
 });
 
 function errorState(message: string): BlocksActionState {
@@ -133,20 +138,20 @@ function parseBlockContentFromTemplate(
 function parseRawJsonContent(contentJson: string): { content: Record<string, unknown> } | { error: string } {
   const trimmed = contentJson.trim();
   if (!trimmed) {
-    return { error: "Nội dung JSON block không được để trống." };
+    return { error: "Nội dung JSON của block không được để trống." };
   }
 
   try {
     const parsed = JSON.parse(trimmed) as unknown;
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return { error: "Nội dung JSON block phải là object hợp lệ." };
+      return { error: "Nội dung JSON của block phải là object hợp lệ." };
     }
 
     return {
       content: parsed as Record<string, unknown>
     };
   } catch {
-    return { error: "Nội dung JSON block không hợp lệ." };
+    return { error: "Nội dung JSON của block không hợp lệ." };
   }
 }
 
@@ -164,7 +169,7 @@ async function validateAuthenticatedEditor() {
 
   const role = session.user.role;
   if (role !== UserRole.ADMIN && role !== UserRole.EDITOR) {
-    return errorState("Bạn không có quyền cập nhật nội dung block.");
+    return errorState("Bạn không có quyền cập nhật nội dung landing page.");
   }
 
   return null;
@@ -194,6 +199,85 @@ async function upsertSectionByKey(sectionKey: string, input: { title: string; de
     },
     create: createSection
   });
+}
+
+export async function saveLayoutOrderAction(
+  _prevState: BlocksActionState,
+  formData: FormData
+): Promise<BlocksActionState> {
+  const authError = await validateAuthenticatedEditor();
+  if (authError) {
+    return authError;
+  }
+
+  if (!process.env.DATABASE_URL) {
+    return errorState("Thiếu DATABASE_URL nên chưa thể lưu bố cục.");
+  }
+
+  const rawJson = String(formData.get("layout_json") ?? "");
+  if (!rawJson.trim()) {
+    return errorState("Không tìm thấy dữ liệu bố cục để lưu.");
+  }
+
+  let parsedRows: unknown;
+  try {
+    parsedRows = JSON.parse(rawJson);
+  } catch {
+    return errorState("Dữ liệu bố cục không hợp lệ.");
+  }
+
+  const parsed = z.array(layoutRowSchema).min(1).safeParse(parsedRows);
+  if (!parsed.success) {
+    return errorState(parsed.error.issues[0]?.message ?? "Dữ liệu bố cục không hợp lệ.");
+  }
+
+  try {
+    const sectionKeys = parsed.data.map((row) => row.sectionKey);
+    const sections = await prisma.siteSection.findMany({
+      where: {
+        key: { in: sectionKeys }
+      },
+      select: { id: true, key: true }
+    });
+
+    const sectionIdByKey = new Map(sections.map((section) => [section.key, section.id]));
+
+    await prisma.$transaction(async (tx) => {
+      for (let sectionIndex = 0; sectionIndex < parsed.data.length; sectionIndex += 1) {
+        const layoutSection = parsed.data[sectionIndex];
+        const sectionId = sectionIdByKey.get(layoutSection.sectionKey);
+
+        if (!sectionId) {
+          continue;
+        }
+
+        await tx.siteSection.update({
+          where: { id: sectionId },
+          data: {
+            sortOrder: sectionIndex + 1
+          }
+        });
+
+        for (let blockIndex = 0; blockIndex < layoutSection.blocks.length; blockIndex += 1) {
+          const blockKey = layoutSection.blocks[blockIndex];
+          await tx.pageBlock.updateMany({
+            where: {
+              sectionId,
+              blockKey
+            },
+            data: {
+              sortOrder: blockIndex + 1
+            }
+          });
+        }
+      }
+    });
+
+    revalidateHomeContent();
+    return successState("Đã lưu thứ tự bố cục landing page.");
+  } catch {
+    return errorState("Không thể lưu thứ tự bố cục. Vui lòng thử lại.");
+  }
 }
 
 export async function updateSectionAction(
@@ -228,9 +312,9 @@ export async function updateSectionAction(
     });
 
     revalidateHomeContent();
-    return successState("Đã cập nhật section thành công.");
+    return successState("Đã cập nhật mục nội dung thành công.");
   } catch {
-    return errorState("Không thể cập nhật section. Vui lòng thử lại.");
+    return errorState("Không thể cập nhật mục nội dung. Vui lòng thử lại.");
   }
 }
 

@@ -67,11 +67,11 @@ function MarkdownToolbar({
   onInsert: (type: "h2" | "paragraph" | "bold" | "list" | "link") => void;
 }) {
   const actions: Array<{ key: "h2" | "paragraph" | "bold" | "list" | "link"; label: string }> = [
-    { key: "h2", label: "Heading" },
-    { key: "paragraph", label: "Paragraph" },
-    { key: "bold", label: "Bold" },
-    { key: "list", label: "Bullet list" },
-    { key: "link", label: "Link" }
+    { key: "h2", label: "Tiêu đề" },
+    { key: "paragraph", label: "Đoạn văn" },
+    { key: "bold", label: "In đậm" },
+    { key: "list", label: "Danh sách" },
+    { key: "link", label: "Liên kết" }
   ];
 
   return (
@@ -271,7 +271,7 @@ export function AdminBlogEditorForm({ mode, categories, initialData, databaseRea
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Meta title</span>
+            <span className="mb-1 block font-medium text-slate-700">Tiêu đề SEO</span>
             <input
               name="seoTitle"
               defaultValue={initialData.seoTitle}
@@ -280,7 +280,7 @@ export function AdminBlogEditorForm({ mode, categories, initialData, databaseRea
           </label>
 
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Meta description</span>
+            <span className="mb-1 block font-medium text-slate-700">Mô tả SEO</span>
             <input
               name="seoDescription"
               defaultValue={initialData.seoDescription}
@@ -297,9 +297,9 @@ export function AdminBlogEditorForm({ mode, categories, initialData, databaseRea
               defaultValue={initialData.status}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
             >
-              <option value={PublishStatus.DRAFT}>Draft</option>
-              <option value={PublishStatus.PUBLISHED}>Published</option>
-              <option value={PublishStatus.ARCHIVED}>Archived</option>
+              <option value={PublishStatus.DRAFT}>Bản nháp</option>
+              <option value={PublishStatus.PUBLISHED}>Đã xuất bản</option>
+              <option value={PublishStatus.ARCHIVED}>Lưu trữ</option>
             </select>
           </label>
 

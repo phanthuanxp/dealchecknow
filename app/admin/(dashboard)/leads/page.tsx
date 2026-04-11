@@ -202,7 +202,7 @@ export default async function AdminLeadsPage({ searchParams }: AdminLeadsPagePro
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý lead báo giá</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý yêu cầu báo giá</h1>
         <p className="mt-2 text-sm text-slate-600">
           Danh sách yêu cầu báo giá từ website, hỗ trợ lọc nhanh và cập nhật trạng thái chăm sóc khách hàng theo thời gian thực.
         </p>

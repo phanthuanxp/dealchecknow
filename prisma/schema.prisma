@@ -222,12 +222,14 @@ model PricingItem {
   description  String?
   isPopular    Boolean  @default(false)
   isActive     Boolean  @default(true)
+  showOnHome   Boolean  @default(false)
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([vehicleType, isActive])
   @@index([isActive, sortOrder])
+  @@index([showOnHome, isActive, sortOrder])
 }
 
 model QuoteRequest {
@@ -291,4 +293,52 @@ model SiteSetting {
   updatedAt   DateTime @updatedAt
 
   @@index([groupKey, isPublic])
+}
+
+model MediaAsset {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  url         String
+  altText     String?
+  groupKey    String   @default("general")
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  width       Int?
+  height      Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([groupKey, isActive, sortOrder])
+}
+
+model ServicePage {
+  id                  String   @id @default(cuid())
+  title               String
+  slug                String   @unique
+  shortDescription    String   @db.Text
+  metaTitle           String?
+  metaDescription     String?
+  h1                  String?
+  heroTitle           String?
+  heroDescription     String?  @db.Text
+  featuredImage       String?
+  mainContent         String?  @db.Text
+  contentBlocks       Json?
+  pricingTable        Json?
+  faqItems            Json?
+  routeBenefits       String[]
+  pickupLocations     String[]
+  dropoffLocations    String[]
+  trustHighlights     String[]
+  relatedServiceSlugs String[]
+  legacySlugs         String[]
+  sortOrder           Int      @default(0)
+  isPublished         Boolean  @default(false)
+  canonicalUrl        String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([isPublished, sortOrder])
+  @@index([sortOrder])
 }

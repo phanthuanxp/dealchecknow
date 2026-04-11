@@ -40,9 +40,9 @@ const INITIAL_BLOG_ACTION_STATE: BlogActionState = {
 };
 
 const statusLabelMap: Record<PublishStatus, string> = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  ARCHIVED: "Archived"
+  DRAFT: "Bản nháp",
+  PUBLISHED: "Đã xuất bản",
+  ARCHIVED: "Lưu trữ"
 };
 
 function StatusBadge({ status }: { status: PublishStatus }) {
@@ -184,8 +184,8 @@ export function AdminBlogListManager({ items, databaseReady, filters }: BlogList
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
             >
               <option value="all">Tất cả</option>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
+              <option value="draft">Bản nháp</option>
+              <option value="published">Đã xuất bản</option>
             </select>
           </label>
 
@@ -211,7 +211,7 @@ export function AdminBlogListManager({ items, databaseReady, filters }: BlogList
               <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
                 <th className="px-4 py-3">Bài viết</th>
                 <th className="px-4 py-3">Trạng thái</th>
-                <th className="px-4 py-3">Ngày publish</th>
+                <th className="px-4 py-3">Ngày xuất bản</th>
                 <th className="px-4 py-3">Thao tác</th>
               </tr>
             </thead>

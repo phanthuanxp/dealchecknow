@@ -36,8 +36,8 @@ export function ModulePlaceholder({
       </div>
 
       <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
-        Module đang ở trạng thái placeholder cho phase hiện tại. Chức năng CRUD chi tiết sẽ được triển khai ở phase
-        tiếp theo.
+        Mục này đang ở trạng thái khung chờ cho giai đoạn hiện tại. Chức năng quản lý chi tiết sẽ được triển khai ở
+        giai đoạn tiếp theo.
       </div>
     </section>
   );

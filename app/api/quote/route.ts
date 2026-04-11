@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getBaseSiteUrl } from "@/lib/seo";
 import { sendQuoteRequestTelegram } from "@/lib/telegram";
-import { parseVietnamDateTimeLocal, quoteRequestSchema, tripTypeLabelMap } from "@/lib/validation";
+import {
+  parseVietnamDateTimeLocal,
+  quoteRequestSchema,
+  tripTypeLabelMap,
+  vehicleTypeLabelMap
+} from "@/lib/validation";
 
 type ErrorFieldMap = Record<string, string[]>;
 
@@ -14,6 +19,49 @@ function compactFieldErrors(input: Record<string, string[] | undefined>) {
     }
     return acc;
   }, {});
+}
+
+function normalizeDesiredPrice(rawValue?: string) {
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const digits = rawValue.replace(/[^\d]/g, "");
+  return digits.length > 0 ? Number(digits) : undefined;
+}
+
+function buildLeadNote(input: {
+  tripType: keyof typeof tripTypeLabelMap;
+  vehicleType: keyof typeof vehicleTypeLabelMap;
+  contactPhoneZalo: string;
+  stopovers?: string;
+  needVat?: boolean;
+  desiredPrice?: string;
+  note?: string;
+}) {
+  const lines = [
+    `Loại chuyến: ${tripTypeLabelMap[input.tripType]}`,
+    `Loại xe: ${vehicleTypeLabelMap[input.vehicleType]}`,
+    `Số điện thoại/Zalo: ${input.contactPhoneZalo}`
+  ];
+
+  if (input.stopovers) {
+    lines.push(`Điểm dừng: ${input.stopovers}`);
+  }
+
+  if (input.needVat) {
+    lines.push("Yêu cầu xuất hóa đơn VAT: Có");
+  }
+
+  if (input.desiredPrice) {
+    lines.push(`Giá cước mong muốn: ${input.desiredPrice} VNĐ`);
+  }
+
+  if (input.note) {
+    lines.push(`Ghi chú: ${input.note}`);
+  }
+
+  return lines.join("\n");
 }
 
 export async function POST(request: Request) {
@@ -59,17 +107,28 @@ export async function POST(request: Request) {
   const submittedAt = new Date();
   const siteUrl = getBaseSiteUrl();
 
+  const estimatedPriceNumber = normalizeDesiredPrice(data.desiredPrice);
+
   let quoteRequestId = "";
   try {
     const createdLead = await prisma.quoteRequest.create({
       data: {
-        fullName: "Khách từ website",
+        fullName: data.fullName,
         phone: data.contactPhoneZalo,
         pickupLocation: data.pickupLocation,
         dropoffLocation: data.dropoffLocation,
         pickupTime,
         vehicleType: data.tripType,
-        message: `Loại chuyến: ${tripTypeLabelMap[data.tripType]}\nSố điện thoại/Zalo: ${data.contactPhoneZalo}`,
+        estimatedPrice: typeof estimatedPriceNumber === "number" ? estimatedPriceNumber : undefined,
+        message: buildLeadNote({
+          tripType: data.tripType,
+          vehicleType: data.vehicleType,
+          contactPhoneZalo: data.contactPhoneZalo,
+          stopovers: data.stopovers,
+          needVat: data.needVat,
+          desiredPrice: data.desiredPrice,
+          note: data.note
+        }),
         utmSource: "website"
       },
       select: {
@@ -90,11 +149,17 @@ export async function POST(request: Request) {
   }
 
   const telegramResult = await sendQuoteRequestTelegram({
+    fullName: data.fullName,
     pickupLocation: data.pickupLocation,
+    stopovers: data.stopovers,
     dropoffLocation: data.dropoffLocation,
     pickupDateTime: pickupTime,
     tripType: data.tripType,
+    vehicleType: data.vehicleType,
+    needVat: data.needVat,
+    desiredPrice: data.desiredPrice,
     contactPhoneZalo: data.contactPhoneZalo,
+    note: data.note,
     submittedAt,
     siteUrl
   });

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
@@ -34,6 +35,13 @@ export default async function PrivacyPolicyPage() {
         <p className="mt-3 text-sm text-slate-600">
           Taxi Ninh Bình cam kết bảo vệ thông tin cá nhân của khách hàng khi sử dụng website và dịch vụ đặt xe.
         </p>
+        <Image
+          src="/images/cover-contact.svg"
+          alt="Chính sách bảo mật thông tin khách hàng của Taxi Ninh Bình"
+          width={1000}
+          height={520}
+          className="mt-4 h-40 w-full rounded-xl border border-slate-200 object-cover sm:h-48"
+        />
       </section>
 
       <section className="mt-4 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">

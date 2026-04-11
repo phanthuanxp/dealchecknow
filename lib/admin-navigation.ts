@@ -11,9 +11,9 @@ export const adminNavItems: AdminNavItem[] = [
     description: "Bảng điều khiển"
   },
   {
-    label: "Blog",
+    label: "Bài viết",
     href: "/admincp/blog",
-    description: "Bài viết"
+    description: "Quản lý bài viết"
   },
   {
     label: "Danh mục",
@@ -21,17 +21,22 @@ export const adminNavItems: AdminNavItem[] = [
     description: "Phân loại bài viết"
   },
   {
-    label: "Leads",
+    label: "Yêu cầu báo giá",
     href: "/admincp/leads",
-    description: "Yêu cầu báo giá"
+    description: "Quản lý khách liên hệ"
   },
   {
-    label: "Blocks",
+    label: "Khối nội dung",
     href: "/admincp/blocks",
-    description: "Nội dung trang"
+    description: "Nội dung trang chủ"
   },
   {
-    label: "FAQ",
+    label: "Thư viện ảnh",
+    href: "/admincp/media",
+    description: "Banner và ảnh dịch vụ"
+  },
+  {
+    label: "Hỏi đáp",
     href: "/admincp/faq",
     description: "Câu hỏi thường gặp"
   },
@@ -39,6 +44,11 @@ export const adminNavItems: AdminNavItem[] = [
     label: "Bảng giá",
     href: "/admincp/pricing",
     description: "Tuyến và giá"
+  },
+  {
+    label: "Dịch vụ SEO",
+    href: "/admincp/services",
+    description: "Trang dịch vụ động"
   },
   {
     label: "Đánh giá",

@@ -204,6 +204,17 @@ async function seedSiteSectionsAndBlocks() {
       sortOrder: 7
     },
     {
+      sectionKey: "home-hero",
+      blockKey: "hero-banner-images",
+      blockType: "gallery",
+      title: "Hero Banner Images",
+      content: {
+        images: ["/images/taxi-banner-1.svg", "/images/taxi-banner-2.svg", "/images/taxi-banner-3.svg"],
+        alt: "Banner Taxi Ninh Bình"
+      },
+      sortOrder: 8
+    },
+    {
       sectionKey: "home-quote",
       blockKey: "quote-note",
       blockType: "text",
@@ -220,7 +231,9 @@ async function seedSiteSectionsAndBlocks() {
       title: "Taxi nội tỉnh",
       content: {
         title: "Taxi nội tỉnh Ninh Bình",
-        description: "Đón nhanh tại trung tâm thành phố, ga Ninh Bình, khách sạn và điểm du lịch."
+        description: "Đón nhanh tại trung tâm thành phố, ga Ninh Bình, khách sạn và điểm du lịch.",
+        imageUrl: "/images/car-sedan.svg",
+        iconKey: "car"
       },
       sortOrder: 1
     },
@@ -231,7 +244,9 @@ async function seedSiteSectionsAndBlocks() {
       title: "Đưa đón sân bay",
       content: {
         title: "Đưa đón sân bay Nội Bài",
-        description: "Lịch trình rõ ràng, đón đúng giờ theo lịch bay, hỗ trợ hành lý đầy đủ."
+        description: "Lịch trình rõ ràng, đón đúng giờ theo lịch bay, hỗ trợ hành lý đầy đủ.",
+        imageUrl: "/images/car-suv.svg",
+        iconKey: "route"
       },
       sortOrder: 2
     },
@@ -242,7 +257,9 @@ async function seedSiteSectionsAndBlocks() {
       title: "Xe theo chuyến",
       content: {
         title: "Xe du lịch theo chuyến",
-        description: "Phù hợp lịch trình Tam Cốc, Tràng An, Bái Đính, Hoa Lư cho nhóm gia đình và công ty."
+        description: "Phù hợp lịch trình Tam Cốc, Tràng An, Bái Đính, Hoa Lư cho nhóm gia đình và công ty.",
+        imageUrl: "/images/car-tour.svg",
+        iconKey: "star"
       },
       sortOrder: 3
     },
@@ -263,7 +280,8 @@ async function seedSiteSectionsAndBlocks() {
       title: "Đúng giờ",
       content: {
         title: "Đón đúng giờ đã hẹn",
-        description: "Theo dõi lịch và chủ động liên hệ để đảm bảo chuyến đi đúng kế hoạch của bạn."
+        description: "Theo dõi lịch và chủ động liên hệ để đảm bảo chuyến đi đúng kế hoạch của bạn.",
+        iconKey: "clock"
       },
       sortOrder: 1
     },
@@ -274,7 +292,8 @@ async function seedSiteSectionsAndBlocks() {
       title: "Xe sạch",
       content: {
         title: "Xe sạch, tài xế lịch sự",
-        description: "Xe được vệ sinh thường xuyên, tài xế thân thiện và hỗ trợ khách tận tình."
+        description: "Xe được vệ sinh thường xuyên, tài xế thân thiện và hỗ trợ khách tận tình.",
+        iconKey: "shield"
       },
       sortOrder: 2
     },
@@ -285,7 +304,8 @@ async function seedSiteSectionsAndBlocks() {
       title: "Giá rõ ràng",
       content: {
         title: "Giá minh bạch, tư vấn rõ trước chuyến",
-        description: "Thông tin chi phí được thống nhất rõ ràng trước khi khởi hành."
+        description: "Thông tin chi phí được thống nhất rõ ràng trước khi khởi hành.",
+        iconKey: "check"
       },
       sortOrder: 3
     },
@@ -367,6 +387,7 @@ async function seedPricingItems() {
       price: new Prisma.Decimal("200000"),
       description: "Door-to-door one-way transfer",
       isPopular: true,
+      showOnHome: true,
       sortOrder: 1
     },
     {
@@ -378,6 +399,7 @@ async function seedPricingItems() {
       price: new Prisma.Decimal("300000"),
       description: "Comfortable ride for family groups",
       isPopular: true,
+      showOnHome: true,
       sortOrder: 2
     },
     {
@@ -389,6 +411,7 @@ async function seedPricingItems() {
       price: new Prisma.Decimal("1300000"),
       description: "Private airport transfer",
       isPopular: false,
+      showOnHome: true,
       sortOrder: 3
     }
   ];
@@ -405,6 +428,7 @@ async function seedPricingItems() {
         description: item.description,
         isPopular: item.isPopular,
         isActive: true,
+        showOnHome: item.showOnHome,
         sortOrder: item.sortOrder
       },
       create: {
@@ -417,6 +441,7 @@ async function seedPricingItems() {
         description: item.description,
         isPopular: item.isPopular,
         isActive: true,
+        showOnHome: item.showOnHome,
         sortOrder: item.sortOrder
       }
     });
@@ -711,6 +736,384 @@ async function seedSiteSettings() {
   }
 }
 
+async function seedMediaAssets() {
+  const assets = [
+    {
+      code: "home-banner-1",
+      title: "Banner taxi Ninh Bình 1",
+      url: "/images/taxi-banner-1.svg",
+      altText: "Taxi phục vụ khách du lịch tại Ninh Bình",
+      groupKey: "home-banners",
+      sortOrder: 1
+    },
+    {
+      code: "home-banner-2",
+      title: "Banner taxi Ninh Bình 2",
+      url: "/images/taxi-banner-2.svg",
+      altText: "Xe đưa đón tuyến Ninh Bình đi sân bay Nội Bài",
+      groupKey: "home-banners",
+      sortOrder: 2
+    },
+    {
+      code: "home-banner-3",
+      title: "Banner taxi Ninh Bình 3",
+      url: "/images/taxi-banner-3.svg",
+      altText: "Taxi đường dài và xe đoàn tại Ninh Bình",
+      groupKey: "home-banners",
+      sortOrder: 3
+    },
+    {
+      code: "service-car-sedan",
+      title: "Ảnh xe sedan dịch vụ",
+      url: "/images/car-sedan.svg",
+      altText: "Xe sedan dịch vụ taxi Ninh Bình",
+      groupKey: "service-images",
+      sortOrder: 1
+    },
+    {
+      code: "service-car-suv",
+      title: "Ảnh xe SUV dịch vụ",
+      url: "/images/car-suv.svg",
+      altText: "Xe SUV dịch vụ taxi Ninh Bình",
+      groupKey: "service-images",
+      sortOrder: 2
+    },
+    {
+      code: "service-car-tour",
+      title: "Ảnh xe du lịch",
+      url: "/images/car-tour.svg",
+      altText: "Xe du lịch phục vụ tuyến dài",
+      groupKey: "service-images",
+      sortOrder: 3
+    }
+  ];
+
+  for (const item of assets) {
+    await prisma.mediaAsset.upsert({
+      where: { code: item.code },
+      update: {
+        title: item.title,
+        url: item.url,
+        altText: item.altText,
+        groupKey: item.groupKey,
+        isActive: true,
+        sortOrder: item.sortOrder
+      },
+      create: {
+        code: item.code,
+        title: item.title,
+        url: item.url,
+        altText: item.altText,
+        groupKey: item.groupKey,
+        isActive: true,
+        sortOrder: item.sortOrder
+      }
+    });
+  }
+}
+
+async function seedServicePages() {
+  const services = [
+    {
+      slug: "taxi-ha-noi-ninh-binh",
+      title: "Taxi Hà Nội đi Ninh Bình",
+      shortDescription:
+        "Dịch vụ xe riêng đón tận nơi tại Hà Nội, di chuyển nhanh về Ninh Bình với giá minh bạch và hỗ trợ 24/7.",
+      metaTitle: "Taxi Hà Nội đi Ninh Bình giá trọn gói - Xe riêng 24/7",
+      metaDescription:
+        "Taxi Hà Nội đi Ninh Bình xe riêng, không ghép khách, đón tận nơi, giá trọn gói rõ ràng. Hỗ trợ nhanh qua hotline và Zalo.",
+      h1: "Taxi Hà Nội đi Ninh Bình - Xe riêng đón tận nơi 24/7",
+      heroTitle: "Taxi Hà Nội đi Ninh Bình giá trọn gói",
+      heroDescription:
+        "Phù hợp khách du lịch, khách gia đình, khách công tác cần lịch trình rõ ràng và xác nhận chuyến nhanh.",
+      featuredImage: "/images/services/service-ha-noi.webp",
+      mainContent:
+        "Tuyến Hà Nội đi Ninh Bình phù hợp cho khách đi du lịch, khách về quê và khách công tác cần xe riêng an toàn, đúng giờ. Đội xe vận hành linh hoạt theo điểm đón thực tế và lịch trình của khách.",
+      routeBenefits: [
+        "Đón tận nơi tại nội thành Hà Nội",
+        "Xe riêng không ghép khách",
+        "Báo giá rõ ràng trước chuyến đi"
+      ],
+      pickupLocations: ["Hoàn Kiếm", "Cầu Giấy", "Hà Đông", "Mỹ Đình", "Ga Hà Nội"],
+      dropoffLocations: ["TP Ninh Bình", "Tam Cốc", "Tràng An", "Bái Đính", "Hoa Lư"],
+      trustHighlights: [
+        "Hỗ trợ 24/7 qua hotline và Zalo",
+        "Tài xế am hiểu tuyến Hà Nội - Ninh Bình",
+        "Xác nhận nhanh, hạn chế phát sinh"
+      ],
+      pricingTable: [
+        { vehicle: "Xe 4 chỗ", price: "1.100.000đ/chuyến", note: "Phù hợp 1-3 khách" },
+        { vehicle: "Xe 7 chỗ", price: "1.300.000đ/chuyến", note: "Phù hợp gia đình 4-6 khách" },
+        { vehicle: "Xe 16 chỗ", price: "1.700.000đ/chuyến", note: "Phù hợp nhóm đông" }
+      ],
+      faqItems: [
+        {
+          question: "Đi từ Hà Nội về Ninh Bình mất bao lâu?",
+          answer: "Thời gian trung bình khoảng 1 giờ 45 phút đến 2 giờ 30 phút tùy điểm đón và giao thông."
+        },
+        {
+          question: "Có thể thêm điểm dừng giữa đường không?",
+          answer: "Có, vui lòng báo trước để điều phối cập nhật lộ trình và chi phí chính xác."
+        },
+        {
+          question: "Có hỗ trợ chuyến sớm hoặc chuyến đêm không?",
+          answer: "Có. Dịch vụ hoạt động 24/7 theo lịch khách đặt."
+        },
+        {
+          question: "Giá đã bao gồm phí cao tốc chưa?",
+          answer: "Chi phí chi tiết sẽ được báo rõ trước khi xác nhận chuyến."
+        },
+        {
+          question: "Tôi đặt xe nhanh nhất bằng cách nào?",
+          answer: "Gọi hotline hoặc nhắn Zalo kèm điểm đón, điểm trả và giờ đi để xác nhận nhanh."
+        }
+      ],
+      relatedServiceSlugs: ["taxi-noi-bai-ninh-binh", "taxi-ninh-binh-ha-noi", "taxi-ninh-binh-noi-bai"],
+      legacySlugs: ["taxi-ha-noi-di-ninh-binh"],
+      sortOrder: 1,
+      isPublished: true,
+      canonicalUrl: ""
+    },
+    {
+      slug: "taxi-noi-bai-ninh-binh",
+      title: "Taxi Nội Bài đi Ninh Bình",
+      shortDescription:
+        "Đón sân bay Nội Bài đúng giờ, theo dõi lịch bay và hỗ trợ hành lý cho khách về Ninh Bình 24/7.",
+      metaTitle: "Taxi Nội Bài đi Ninh Bình - Đón sân bay 24/7, giá trọn gói",
+      metaDescription:
+        "Taxi Nội Bài đi Ninh Bình đón tận cửa sân bay, xe riêng không ghép khách, theo dõi chuyến bay và báo giá rõ ràng.",
+      h1: "Taxi Nội Bài đi Ninh Bình - Đón tận cửa sân bay 24/7",
+      heroTitle: "Taxi Nội Bài đi Ninh Bình không chờ đợi",
+      heroDescription:
+        "Phù hợp khách bay sớm, bay đêm và nhóm gia đình có nhiều hành lý cần xe riêng an toàn.",
+      featuredImage: "/images/services/service-noi-bai.jpg",
+      mainContent:
+        "Tuyến Nội Bài đi Ninh Bình tập trung vào việc đón trả đúng giờ bay, hỗ trợ vị trí gặp tại nhà ga và điều chỉnh linh hoạt nếu chuyến bay thay đổi.",
+      routeBenefits: [
+        "Theo dõi lịch bay theo thời gian thực",
+        "Hỗ trợ hành lý tại nhà ga",
+        "Xác nhận điểm gặp rõ ràng trước chuyến"
+      ],
+      pickupLocations: ["Nhà ga T1", "Nhà ga T2", "Khu vực đón taxi sân bay", "Khách sạn quanh Nội Bài"],
+      dropoffLocations: ["TP Ninh Bình", "Tam Cốc", "Tràng An", "Bái Đính", "Ninh Hải"],
+      trustHighlights: [
+        "Đội xe hoạt động 24/7",
+        "Tài xế quen tuyến Nội Bài - Ninh Bình",
+        "Giá minh bạch trước khi khởi hành"
+      ],
+      pricingTable: [
+        { vehicle: "Xe 4 chỗ", price: "1.300.000đ/chuyến", note: "Phù hợp khách cá nhân/cặp đôi" },
+        { vehicle: "Xe 7 chỗ", price: "1.500.000đ/chuyến", note: "Phù hợp gia đình nhiều hành lý" },
+        { vehicle: "Xe 16 chỗ", price: "1.900.000đ/chuyến", note: "Phù hợp nhóm đông/đoàn tour" }
+      ],
+      faqItems: [
+        {
+          question: "Nếu chuyến bay delay thì xử lý thế nào?",
+          answer: "Điều phối sẽ cập nhật theo thực tế chuyến bay và sắp xếp đón phù hợp."
+        },
+        {
+          question: "Điểm gặp tài xế ở sân bay ở đâu?",
+          answer: "Tài xế sẽ gọi trước và thống nhất điểm đón theo đúng nhà ga."
+        },
+        {
+          question: "Có phục vụ chuyến đêm không?",
+          answer: "Có. Tuyến sân bay hoạt động liên tục 24/7."
+        },
+        {
+          question: "Có hỗ trợ khách nhiều vali không?",
+          answer: "Có, vui lòng báo trước số hành lý để bố trí xe phù hợp."
+        },
+        {
+          question: "Có thể đặt xe trước bao lâu?",
+          answer: "Bạn nên đặt sớm để chủ động xe vào khung giờ cao điểm."
+        }
+      ],
+      relatedServiceSlugs: ["taxi-ha-noi-ninh-binh", "taxi-ninh-binh-ha-noi", "taxi-ninh-binh-noi-bai"],
+      legacySlugs: ["taxi-noi-bai-di-ninh-binh"],
+      sortOrder: 2,
+      isPublished: true,
+      canonicalUrl: ""
+    },
+    {
+      slug: "taxi-ninh-binh-ha-noi",
+      title: "Taxi Ninh Bình đi Hà Nội",
+      shortDescription:
+        "Đón tận nơi tại Ninh Bình đi Hà Nội nhanh chóng, xe riêng an toàn, báo giá rõ trước chuyến.",
+      metaTitle: "Taxi Ninh Bình đi Hà Nội - Xe riêng, đón tận nơi, giá rõ ràng",
+      metaDescription:
+        "Taxi Ninh Bình đi Hà Nội phục vụ 24/7, đón tại Tam Cốc, Tràng An, Bái Đính và trung tâm TP Ninh Bình.",
+      h1: "Taxi Ninh Bình đi Hà Nội - Đặt xe nhanh, giá trọn gói",
+      heroTitle: "Taxi Ninh Bình đi Hà Nội linh hoạt theo lịch",
+      heroDescription:
+        "Dành cho khách đi công tác, khám bệnh, đi bến xe, ga tàu với lịch đón chủ động và minh bạch.",
+      featuredImage: "/images/services/service-ha-noi.webp",
+      mainContent:
+        "Tuyến Ninh Bình đi Hà Nội phù hợp khách cần di chuyển nhanh với xe riêng. Có thể điều chỉnh điểm đón/trả theo nhu cầu thực tế và hỗ trợ lịch trình linh hoạt.",
+      routeBenefits: [
+        "Đón tận nơi tại Tam Cốc, Tràng An, Bái Đính",
+        "Chủ động giờ khởi hành theo lịch khách",
+        "Không ghép khách, cam kết riêng tư"
+      ],
+      pickupLocations: ["TP Ninh Bình", "Tam Cốc", "Tràng An", "Bái Đính", "Hoa Lư"],
+      dropoffLocations: ["Ba Đình", "Đống Đa", "Hai Bà Trưng", "Giáp Bát", "Mỹ Đình"],
+      trustHighlights: [
+        "Tài xế hỗ trợ hành lý tận tình",
+        "Báo giá chi tiết trước chuyến",
+        "Có hỗ trợ chiều về theo yêu cầu"
+      ],
+      pricingTable: [
+        { vehicle: "Xe 4 chỗ", price: "1.150.000đ/chuyến", note: "Phù hợp 1-3 khách" },
+        { vehicle: "Xe 7 chỗ", price: "1.350.000đ/chuyến", note: "Phù hợp gia đình 4-6 khách" },
+        { vehicle: "Xe 16 chỗ", price: "1.700.000đ/chuyến", note: "Phù hợp nhóm/đoàn" }
+      ],
+      faqItems: [
+        {
+          question: "Có nhận chuyến sáng sớm không?",
+          answer: "Có. Chúng tôi hỗ trợ đón theo khung giờ khách yêu cầu."
+        },
+        {
+          question: "Có xuất hóa đơn VAT không?",
+          answer: "Có hỗ trợ, vui lòng báo trước khi xác nhận chuyến."
+        },
+        {
+          question: "Có thể thay đổi điểm trả khi đang đi không?",
+          answer: "Có thể, nhưng nên báo sớm để điều phối cập nhật lộ trình."
+        },
+        {
+          question: "Giá có thay đổi theo giờ cao điểm không?",
+          answer: "Giá chốt sẽ được báo rõ trước khi khởi hành."
+        },
+        {
+          question: "Đặt xe qua kênh nào nhanh nhất?",
+          answer: "Bạn có thể gọi hotline hoặc nhắn Zalo để được xác nhận nhanh."
+        }
+      ],
+      relatedServiceSlugs: ["taxi-ha-noi-ninh-binh", "taxi-noi-bai-ninh-binh", "taxi-ninh-binh-noi-bai"],
+      legacySlugs: ["taxi-ninh-binh-di-ha-noi"],
+      sortOrder: 3,
+      isPublished: true,
+      canonicalUrl: ""
+    },
+    {
+      slug: "taxi-ninh-binh-noi-bai",
+      title: "Taxi Ninh Bình đi Nội Bài",
+      shortDescription:
+        "Dịch vụ taxi Ninh Bình đi sân bay Nội Bài đúng giờ, xe riêng đời mới, hỗ trợ 24/7.",
+      metaTitle: "Taxi Ninh Bình đi Nội Bài - Đúng giờ, xe riêng, giá trọn gói",
+      metaDescription:
+        "Taxi Ninh Bình đi Nội Bài phục vụ 24/7, hỗ trợ hành lý, đón linh hoạt và báo giá rõ ràng trước chuyến.",
+      h1: "Taxi Ninh Bình đi Nội Bài - Không lo lỡ chuyến bay",
+      heroTitle: "Taxi Ninh Bình đi Nội Bài chủ động giờ bay",
+      heroDescription:
+        "Phù hợp khách đi sân bay sáng sớm, đi đêm và nhóm gia đình cần xe rộng, vận hành ổn định.",
+      featuredImage: "/images/services/service-noi-bai.jpg",
+      mainContent:
+        "Tuyến Ninh Bình đi Nội Bài được tối ưu cho khách cần đúng giờ bay. Điều phối hỗ trợ xác nhận sớm, gợi ý giờ xuất phát và cập nhật lộ trình khi cần.",
+      routeBenefits: [
+        "Chuyên tuyến sân bay Nội Bài",
+        "Đưa đón 24/7 kể cả chuyến đêm",
+        "Hỗ trợ khách nhiều hành lý"
+      ],
+      pickupLocations: ["TP Ninh Bình", "Tam Cốc", "Tràng An", "Bái Đính", "Ninh Hải"],
+      dropoffLocations: ["Nhà ga T1 Nội Bài", "Nhà ga T2 Nội Bài", "Khu vực bãi đỗ sân bay"],
+      trustHighlights: [
+        "Xác nhận lộ trình nhanh qua hotline/Zalo",
+        "Xe sạch, tài xế lịch sự",
+        "Giá chốt rõ ràng trước chuyến đi"
+      ],
+      pricingTable: [
+        { vehicle: "Xe 4 chỗ", price: "1.300.000đ/chuyến", note: "Phù hợp khách cá nhân" },
+        { vehicle: "Xe 7 chỗ", price: "1.550.000đ/chuyến", note: "Phù hợp gia đình nhiều hành lý" },
+        { vehicle: "Xe 16 chỗ", price: "1.950.000đ/chuyến", note: "Phù hợp đoàn đông khách" }
+      ],
+      faqItems: [
+        {
+          question: "Nên đi trước giờ bay bao lâu?",
+          answer: "Thông thường nên đi trước 4-5 giờ tùy hãng bay và thời điểm."
+        },
+        {
+          question: "Có nhận chuyến 2-3 giờ sáng không?",
+          answer: "Có. Tuyến sân bay phục vụ liên tục 24/7."
+        },
+        {
+          question: "Có thể đón nhiều điểm tại Ninh Bình không?",
+          answer: "Có, điều phối sẽ gom lộ trình để tối ưu thời gian."
+        },
+        {
+          question: "Nếu đổi giờ bay gấp thì sao?",
+          answer: "Vui lòng báo sớm để điều phối cập nhật phương án phù hợp."
+        },
+        {
+          question: "Làm sao để chốt xe nhanh?",
+          answer: "Gửi điểm đón, điểm trả, giờ đi qua hotline/Zalo để xác nhận nhanh."
+        }
+      ],
+      relatedServiceSlugs: ["taxi-ha-noi-ninh-binh", "taxi-noi-bai-ninh-binh", "taxi-ninh-binh-ha-noi"],
+      legacySlugs: ["taxi-ninh-binh-di-san-bay-noi-bai"],
+      sortOrder: 4,
+      isPublished: true,
+      canonicalUrl: ""
+    }
+  ];
+
+  for (const service of services) {
+    await prisma.servicePage.upsert({
+      where: { slug: service.slug },
+      update: {
+        title: service.title,
+        shortDescription: service.shortDescription,
+        metaTitle: service.metaTitle,
+        metaDescription: service.metaDescription,
+        h1: service.h1,
+        heroTitle: service.heroTitle,
+        heroDescription: service.heroDescription,
+        featuredImage: service.featuredImage,
+        mainContent: service.mainContent,
+        contentBlocks: {
+          sections: []
+        } as Prisma.InputJsonValue,
+        pricingTable: service.pricingTable as Prisma.InputJsonValue,
+        faqItems: service.faqItems as Prisma.InputJsonValue,
+        routeBenefits: service.routeBenefits,
+        pickupLocations: service.pickupLocations,
+        dropoffLocations: service.dropoffLocations,
+        trustHighlights: service.trustHighlights,
+        relatedServiceSlugs: service.relatedServiceSlugs,
+        legacySlugs: service.legacySlugs,
+        sortOrder: service.sortOrder,
+        isPublished: service.isPublished,
+        canonicalUrl: service.canonicalUrl || null
+      },
+      create: {
+        title: service.title,
+        slug: service.slug,
+        shortDescription: service.shortDescription,
+        metaTitle: service.metaTitle,
+        metaDescription: service.metaDescription,
+        h1: service.h1,
+        heroTitle: service.heroTitle,
+        heroDescription: service.heroDescription,
+        featuredImage: service.featuredImage,
+        mainContent: service.mainContent,
+        contentBlocks: {
+          sections: []
+        } as Prisma.InputJsonValue,
+        pricingTable: service.pricingTable as Prisma.InputJsonValue,
+        faqItems: service.faqItems as Prisma.InputJsonValue,
+        routeBenefits: service.routeBenefits,
+        pickupLocations: service.pickupLocations,
+        dropoffLocations: service.dropoffLocations,
+        trustHighlights: service.trustHighlights,
+        relatedServiceSlugs: service.relatedServiceSlugs,
+        legacySlugs: service.legacySlugs,
+        sortOrder: service.sortOrder,
+        isPublished: service.isPublished,
+        canonicalUrl: service.canonicalUrl || null
+      }
+    });
+  }
+}
+
 async function main() {
   const admin = await seedAdminUser();
   await seedSiteSectionsAndBlocks();
@@ -719,6 +1122,8 @@ async function main() {
   await seedTestimonials();
   await seedBlog(admin.id);
   await seedSiteSettings();
+  await seedMediaAssets();
+  await seedServicePages();
 }
 
 main()

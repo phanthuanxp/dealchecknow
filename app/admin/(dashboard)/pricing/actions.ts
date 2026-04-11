@@ -14,33 +14,40 @@ export type PricingActionState = {
   message: string;
 };
 
-const pricingSchema = z.object({
-  code: z
-    .string()
-    .trim()
-    .min(2, "Mã tuyến phải có ít nhất 2 ký tự.")
-    .max(120, "Mã tuyến quá dài.")
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Mã tuyến chỉ gồm chữ thường, số và dấu gạch ngang."),
+const routePricingSchema = z.object({
   routeName: z.string().trim().min(4, "Tên tuyến phải có ít nhất 4 ký tự.").max(200, "Tên tuyến quá dài."),
   fromLocation: z.string().trim().min(2, "Điểm đi phải có ít nhất 2 ký tự.").max(120, "Điểm đi quá dài."),
   toLocation: z.string().trim().min(2, "Điểm đến phải có ít nhất 2 ký tự.").max(120, "Điểm đến quá dài."),
-  vehicleType: z.string().trim().min(2, "Loại xe phải có ít nhất 2 ký tự.").max(120, "Loại xe quá dài."),
-  price: z.coerce.number().min(1000, "Giá phải lớn hơn 1.000."),
+  price4: z.coerce.number().min(1000, "Giá xe 4 chỗ phải lớn hơn 1.000."),
+  price7: z.coerce.number().min(1000, "Giá xe 7 chỗ phải lớn hơn 1.000."),
+  price16: z.coerce.number().min(1000, "Giá xe 16 chỗ phải lớn hơn 1.000."),
   currency: z.string().trim().min(2).max(8),
   unit: z.string().trim().min(2).max(30),
   description: z.string().trim().max(1000),
   sortOrder: z.coerce.number().int().min(-999).max(9999),
   isPopular: z.boolean(),
-  isActive: z.boolean()
+  isActive: z.boolean(),
+  showOnHome: z.boolean(),
+  baseCode: z.string().trim().max(120)
 });
 
-const updatePricingSchema = pricingSchema.extend({
-  id: z.string().trim().min(1)
+const updateRoutePricingSchema = routePricingSchema.extend({
+  tier4Id: z.string().trim().optional(),
+  tier7Id: z.string().trim().optional(),
+  tier16Id: z.string().trim().optional()
 });
 
-const deletePricingSchema = z.object({
-  id: z.string().trim().min(1)
+const deleteRoutePricingSchema = z.object({
+  ids: z.string().trim().min(1)
 });
+
+type SeatTierConfig = {
+  vehicleType: string;
+  codeSuffix: string;
+  sortOffset: number;
+  price: number;
+  id?: string;
+};
 
 function toCode(input: string) {
   return input
@@ -96,7 +103,40 @@ function revalidatePricingPaths() {
   revalidatePath("/bang-gia", "page");
 }
 
-export async function createPricingAction(
+function buildTierConfigs(params: {
+  price4: number;
+  price7: number;
+  price16: number;
+  tier4Id?: string;
+  tier7Id?: string;
+  tier16Id?: string;
+}): SeatTierConfig[] {
+  return [
+    {
+      vehicleType: "Xe 4 chỗ",
+      codeSuffix: "xe-4-cho",
+      sortOffset: 0,
+      price: params.price4,
+      id: params.tier4Id?.trim() || undefined
+    },
+    {
+      vehicleType: "Xe 7 chỗ",
+      codeSuffix: "xe-7-cho",
+      sortOffset: 1,
+      price: params.price7,
+      id: params.tier7Id?.trim() || undefined
+    },
+    {
+      vehicleType: "Xe 16 chỗ",
+      codeSuffix: "xe-16-cho",
+      sortOffset: 2,
+      price: params.price16,
+      id: params.tier16Id?.trim() || undefined
+    }
+  ];
+}
+
+export async function createPricingRouteAction(
   _prev: PricingActionState,
   formData: FormData
 ): Promise<PricingActionState> {
@@ -109,54 +149,71 @@ export async function createPricingAction(
     return failure("Thiếu DATABASE_URL nên chưa thể lưu bảng giá.");
   }
 
-  const rawCode = String(formData.get("code") ?? "");
-  const parsed = pricingSchema.safeParse({
-    code: toCode(rawCode || `${String(formData.get("fromLocation") ?? "")}-${String(formData.get("toLocation") ?? "")}-${String(formData.get("vehicleType") ?? "")}`),
+  const parsed = routePricingSchema.safeParse({
     routeName: String(formData.get("routeName") ?? ""),
     fromLocation: String(formData.get("fromLocation") ?? ""),
     toLocation: String(formData.get("toLocation") ?? ""),
-    vehicleType: String(formData.get("vehicleType") ?? ""),
-    price: String(formData.get("price") ?? ""),
+    price4: String(formData.get("price4") ?? ""),
+    price7: String(formData.get("price7") ?? ""),
+    price16: String(formData.get("price16") ?? ""),
     currency: String(formData.get("currency") ?? "VND"),
     unit: String(formData.get("unit") ?? "chuyến"),
     description: String(formData.get("description") ?? ""),
     sortOrder: String(formData.get("sortOrder") ?? "0"),
     isPopular: formData.get("isPopular") === "on",
-    isActive: formData.get("isActive") === "on"
+    isActive: formData.get("isActive") === "on",
+    showOnHome: formData.get("showOnHome") === "on",
+    baseCode: String(formData.get("baseCode") ?? "")
   });
 
   if (!parsed.success) {
     return failure(parsed.error.issues[0]?.message ?? "Dữ liệu bảng giá không hợp lệ.");
   }
 
-  try {
-    const code = await resolveUniqueCode(parsed.data.code);
+  const baseCode = toCode(
+    parsed.data.baseCode || `${parsed.data.fromLocation}-${parsed.data.toLocation}`
+  );
 
-    await prisma.pricingItem.create({
-      data: {
-        code,
-        routeName: parsed.data.routeName,
-        fromLocation: parsed.data.fromLocation,
-        toLocation: parsed.data.toLocation,
-        vehicleType: parsed.data.vehicleType,
-        price: new Prisma.Decimal(parsed.data.price.toFixed(2)),
-        currency: parsed.data.currency.toUpperCase(),
-        unit: parsed.data.unit,
-        description: parsed.data.description || null,
-        sortOrder: parsed.data.sortOrder,
-        isPopular: parsed.data.isPopular,
-        isActive: parsed.data.isActive
-      }
-    });
+  if (!baseCode) {
+    return failure("Không thể tạo mã tuyến. Vui lòng nhập lại điểm đi và điểm đến.");
+  }
+
+  const tiers = buildTierConfigs({
+    price4: parsed.data.price4,
+    price7: parsed.data.price7,
+    price16: parsed.data.price16
+  });
+
+  try {
+    for (const tier of tiers) {
+      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`);
+      await prisma.pricingItem.create({
+        data: {
+          code,
+          routeName: parsed.data.routeName,
+          fromLocation: parsed.data.fromLocation,
+          toLocation: parsed.data.toLocation,
+          vehicleType: tier.vehicleType,
+          price: new Prisma.Decimal(tier.price.toFixed(2)),
+          currency: parsed.data.currency.toUpperCase(),
+          unit: parsed.data.unit,
+          description: parsed.data.description || null,
+          sortOrder: parsed.data.sortOrder + tier.sortOffset,
+          isPopular: parsed.data.isPopular,
+          isActive: parsed.data.isActive,
+          showOnHome: parsed.data.showOnHome
+        }
+      });
+    }
 
     revalidatePricingPaths();
-    return success("Đã tạo tuyến giá mới.");
+    return success("Đã tạo tuyến giá mới với 3 loại xe.");
   } catch {
-    return failure("Không thể tạo bảng giá.");
+    return failure("Không thể tạo tuyến giá.");
   }
 }
 
-export async function updatePricingAction(
+export async function updatePricingRouteAction(
   _prev: PricingActionState,
   formData: FormData
 ): Promise<PricingActionState> {
@@ -165,55 +222,88 @@ export async function updatePricingAction(
     return failure(authError.error);
   }
 
-  const parsed = updatePricingSchema.safeParse({
-    id: String(formData.get("id") ?? ""),
-    code: toCode(String(formData.get("code") ?? "")),
+  const parsed = updateRoutePricingSchema.safeParse({
     routeName: String(formData.get("routeName") ?? ""),
     fromLocation: String(formData.get("fromLocation") ?? ""),
     toLocation: String(formData.get("toLocation") ?? ""),
-    vehicleType: String(formData.get("vehicleType") ?? ""),
-    price: String(formData.get("price") ?? ""),
+    price4: String(formData.get("price4") ?? ""),
+    price7: String(formData.get("price7") ?? ""),
+    price16: String(formData.get("price16") ?? ""),
     currency: String(formData.get("currency") ?? "VND"),
     unit: String(formData.get("unit") ?? "chuyến"),
     description: String(formData.get("description") ?? ""),
     sortOrder: String(formData.get("sortOrder") ?? "0"),
     isPopular: formData.get("isPopular") === "on",
-    isActive: formData.get("isActive") === "on"
+    isActive: formData.get("isActive") === "on",
+    showOnHome: formData.get("showOnHome") === "on",
+    baseCode: String(formData.get("baseCode") ?? ""),
+    tier4Id: String(formData.get("tier4Id") ?? ""),
+    tier7Id: String(formData.get("tier7Id") ?? ""),
+    tier16Id: String(formData.get("tier16Id") ?? "")
   });
 
   if (!parsed.success) {
     return failure(parsed.error.issues[0]?.message ?? "Dữ liệu bảng giá không hợp lệ.");
   }
 
-  try {
-    const code = await resolveUniqueCode(parsed.data.code, parsed.data.id);
+  const baseCode = toCode(
+    parsed.data.baseCode || `${parsed.data.fromLocation}-${parsed.data.toLocation}`
+  );
+  if (!baseCode) {
+    return failure("Không thể tạo mã tuyến. Vui lòng nhập lại điểm đi và điểm đến.");
+  }
 
-    await prisma.pricingItem.update({
-      where: { id: parsed.data.id },
-      data: {
-        code,
+  const tiers = buildTierConfigs({
+    price4: parsed.data.price4,
+    price7: parsed.data.price7,
+    price16: parsed.data.price16,
+    tier4Id: parsed.data.tier4Id,
+    tier7Id: parsed.data.tier7Id,
+    tier16Id: parsed.data.tier16Id
+  });
+
+  try {
+    for (const tier of tiers) {
+      const commonData = {
         routeName: parsed.data.routeName,
         fromLocation: parsed.data.fromLocation,
         toLocation: parsed.data.toLocation,
-        vehicleType: parsed.data.vehicleType,
-        price: new Prisma.Decimal(parsed.data.price.toFixed(2)),
+        vehicleType: tier.vehicleType,
+        price: new Prisma.Decimal(tier.price.toFixed(2)),
         currency: parsed.data.currency.toUpperCase(),
         unit: parsed.data.unit,
         description: parsed.data.description || null,
-        sortOrder: parsed.data.sortOrder,
+        sortOrder: parsed.data.sortOrder + tier.sortOffset,
         isPopular: parsed.data.isPopular,
-        isActive: parsed.data.isActive
+        isActive: parsed.data.isActive,
+        showOnHome: parsed.data.showOnHome
+      };
+
+      if (tier.id) {
+        await prisma.pricingItem.update({
+          where: { id: tier.id },
+          data: commonData
+        });
+        continue;
       }
-    });
+
+      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`);
+      await prisma.pricingItem.create({
+        data: {
+          code,
+          ...commonData
+        }
+      });
+    }
 
     revalidatePricingPaths();
-    return success("Đã cập nhật bảng giá.");
+    return success("Đã cập nhật tuyến giá.");
   } catch {
-    return failure("Không thể cập nhật bảng giá.");
+    return failure("Không thể cập nhật tuyến giá.");
   }
 }
 
-export async function deletePricingAction(
+export async function deletePricingRouteAction(
   _prev: PricingActionState,
   formData: FormData
 ): Promise<PricingActionState> {
@@ -222,21 +312,30 @@ export async function deletePricingAction(
     return failure(authError.error);
   }
 
-  const parsed = deletePricingSchema.safeParse({
-    id: String(formData.get("id") ?? "")
+  const parsed = deleteRoutePricingSchema.safeParse({
+    ids: String(formData.get("ids") ?? "")
   });
 
   if (!parsed.success) {
-    return failure("ID bảng giá không hợp lệ.");
+    return failure("Không xác định được tuyến cần xóa.");
+  }
+
+  const ids = parsed.data.ids
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  if (ids.length === 0) {
+    return failure("Không xác định được tuyến cần xóa.");
   }
 
   try {
-    await prisma.pricingItem.delete({
-      where: { id: parsed.data.id }
+    await prisma.pricingItem.deleteMany({
+      where: { id: { in: ids } }
     });
     revalidatePricingPaths();
-    return success("Đã xóa bảng giá.");
+    return success("Đã xóa tuyến giá.");
   } catch {
-    return failure("Không thể xóa bảng giá.");
+    return failure("Không thể xóa tuyến giá.");
   }
 }

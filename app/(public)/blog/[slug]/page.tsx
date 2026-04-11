@@ -224,7 +224,11 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                   backgroundSize: "cover",
                   backgroundPosition: "center"
                 }
-              : undefined
+              : {
+                  backgroundImage: "url('/images/cover-service-overview.svg')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center"
+                }
           }
           aria-label={post.title}
         />
@@ -278,7 +282,14 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {relatedPosts.map((related) => (
               <article key={related.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase text-teal-700">{related.category.name}</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={related.coverImageUrl || "/images/cover-about.svg"}
+                  alt={related.title}
+                  className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+                  loading="lazy"
+                />
+                <p className="mt-2 text-xs font-semibold uppercase text-teal-700">{related.category.name}</p>
                 <h3 className="mt-1 text-sm font-semibold text-slate-900">{related.title}</h3>
                 <p className="mt-2 text-xs text-slate-500">{formatDate(related.publishedAt, related.createdAt)}</p>
                 <Link href={`/blog/${related.slug}`} className="mt-3 inline-flex text-sm font-semibold text-teal-700 hover:underline">

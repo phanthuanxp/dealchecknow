@@ -26,7 +26,7 @@ export default async function AdminDashboardLayout({ children }: AdminDashboardL
     <div className="min-h-screen bg-slate-100 md:flex">
       <AdminSidebar roleLabel={resolvedRoleLabel} />
       <div className="min-w-0 flex-1">
-        <AdminTopbar email={session.user.email ?? "unknown@taxininhbinh.com"} roleLabel={resolvedRoleLabel} />
+        <AdminTopbar email={session.user.email ?? "chua-co-email@taxininhbinh.com"} roleLabel={resolvedRoleLabel} />
         <main className="px-4 py-5 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>

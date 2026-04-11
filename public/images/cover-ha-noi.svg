@@ -1,0 +1,17 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="36" fill="url(#bg)"/>
+  <rect x="86" y="82" width="344" height="54" rx="27" fill="#E0F2FE"/>
+  <text x="126" y="117" fill="#0369A1" font-size="28" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Taxi Ninh Bình đi Hà Nội</text>
+  <text x="86" y="236" fill="#0F172A" font-size="68" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Đúng giờ - an toàn</text>
+  <text x="86" y="316" fill="#0F172A" font-size="68" font-family="Segoe UI, Arial, sans-serif" font-weight="800">giá rõ ràng</text>
+  <path d="M84 470H1118" stroke="#94A3B8" stroke-width="8" stroke-linecap="round"/>
+  <rect x="760" y="340" width="304" height="132" rx="28" fill="#0EA5E9"/>
+  <circle cx="802" cy="492" r="26" fill="#0F172A"/>
+  <circle cx="1018" cy="492" r="26" fill="#0F172A"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0F9FF"/>
+      <stop offset="1" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+</svg>

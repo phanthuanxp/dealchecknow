@@ -265,7 +265,7 @@ export function AdminCategoriesManager({ items, databaseReady }: CategoriesManag
       <section className="space-y-3">
         {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            Chưa có danh mục blog nào.
+            Chưa có danh mục bài viết nào.
           </div>
         ) : (
           items.map((item) => <CategoryEditCard key={item.id} item={item} disabled={!databaseReady} />)

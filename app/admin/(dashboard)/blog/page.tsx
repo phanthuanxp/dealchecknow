@@ -98,9 +98,9 @@ export default async function AdminBlogPage({ searchParams }: AdminBlogPageProps
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý blog</h1>
+            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý bài viết</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Danh sách bài viết, lọc theo draft/published và quản lý metadata SEO cho nội dung public.
+              Danh sách bài viết, lọc theo bản nháp hoặc đã xuất bản và quản lý thông tin SEO cho nội dung công khai.
             </p>
           </div>
           <Link

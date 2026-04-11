@@ -253,7 +253,7 @@ export function AdminLeadsManager({
               <table className="min-w-full divide-y divide-slate-200">
                 <thead className="bg-slate-50">
                   <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                    <th className="px-4 py-3">Lead</th>
+                    <th className="px-4 py-3">Khách liên hệ</th>
                     <th className="px-4 py-3">Chuyến đi</th>
                     <th className="px-4 py-3">Ngày giờ đón</th>
                     <th className="px-4 py-3">Trạng thái</th>
@@ -319,7 +319,7 @@ export function AdminLeadsManager({
                             <p>Mã lead: {lead.id}</p>
                             <p>Hành lý: {lead.luggageCount ?? "Chưa có"}</p>
                             <p>Số hành khách: {lead.passengerCount ?? "Chưa có"}</p>
-                            <p>Nguồn: {lead.utmSource ?? "website"}</p>
+                            <p>Nguồn: {lead.utmSource ?? "Trang web"}</p>
                             <p>Ghi chú: {lead.message?.trim() ? lead.message : "Không có"}</p>
                           </div>
                         </details>
@@ -378,7 +378,7 @@ export function AdminLeadsManager({
                       <p>Giờ về: {formatDateTime(lead.returnTime)}</p>
                       <p>Số hành khách: {lead.passengerCount ?? "Chưa có"}</p>
                       <p>Hành lý: {lead.luggageCount ?? "Chưa có"}</p>
-                      <p>Nguồn: {lead.utmSource ?? "website"}</p>
+                      <p>Nguồn: {lead.utmSource ?? "Trang web"}</p>
                       <p>Ghi chú: {lead.message?.trim() ? lead.message : "Không có"}</p>
                       <p>
                         Người xử lý: {lead.handledByName ?? "Chưa có"}{" "}

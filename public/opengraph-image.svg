@@ -1,0 +1,22 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="100" y1="60" x2="1100" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E" />
+      <stop offset="1" stop-color="#0EA5E9" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" rx="30" fill="url(#bg)" />
+  <rect x="76" y="74" width="1048" height="482" rx="26" fill="white" fill-opacity="0.1" />
+  <text x="110" y="230" fill="#FFFFFF" font-size="64" font-family="Arial, sans-serif" font-weight="700">
+    Taxi Ninh Binh 24/7
+  </text>
+  <text x="110" y="300" fill="#E0F2FE" font-size="34" font-family="Arial, sans-serif">
+    Taxi Ninh Binh di Ha Noi - Noi Bai - Tam Coc - Trang An
+  </text>
+  <text x="110" y="352" fill="#E0F2FE" font-size="34" font-family="Arial, sans-serif">
+    Xe sach, tai xe than thien, bao gia minh bach
+  </text>
+  <path d="M812 370C830 324 876 294 924 294H1040C1088 294 1134 324 1152 370L1178 434C1184 446 1176 458 1164 458H800C788 458 780 446 786 434L812 370Z" fill="#FFFFFF" fill-opacity="0.9"/>
+  <circle cx="850" cy="472" r="26" fill="#0F172A"/>
+  <circle cx="1114" cy="472" r="26" fill="#0F172A"/>
+</svg>

@@ -111,7 +111,7 @@ function TestimonialEditCard({ item, disabled }: { item: TestimonialItem; disabl
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Mã testimonial</span>
+            <span className="mb-1 block font-medium text-slate-700">Mã đánh giá</span>
             <input
               name="code"
               defaultValue={item.code}
@@ -142,7 +142,7 @@ function TestimonialEditCard({ item, disabled }: { item: TestimonialItem; disabl
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Rating (1-5)</span>
+            <span className="mb-1 block font-medium text-slate-700">Điểm đánh giá (1-5)</span>
             <input
               name="rating"
               type="number"
@@ -197,11 +197,11 @@ function TestimonialEditCard({ item, disabled }: { item: TestimonialItem; disabl
               defaultChecked={item.isActive}
               className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
             />
-            Publish ra public
+            Hiển thị ngoài trang công khai
           </label>
         </div>
 
-        <SubmitButton label="Lưu testimonial" disabled={disabled} />
+        <SubmitButton label="Lưu đánh giá" disabled={disabled} />
         <ActionNotice state={updateState} />
       </form>
 
@@ -226,7 +226,7 @@ export function AdminTestimonialsManager({ items, databaseReady }: TestimonialsM
       ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Tạo testimonial mới</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Tạo đánh giá mới</h2>
         <form action={createAction} className="mt-3 space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm">
@@ -239,7 +239,7 @@ export function AdminTestimonialsManager({ items, databaseReady }: TestimonialsM
               />
             </label>
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Mã testimonial (tùy chọn)</span>
+              <span className="mb-1 block font-medium text-slate-700">Mã đánh giá (tùy chọn)</span>
               <input
                 name="code"
                 placeholder="de-trong-se-tu-tao"
@@ -261,7 +261,7 @@ export function AdminTestimonialsManager({ items, databaseReady }: TestimonialsM
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Rating (1-5)</span>
+              <span className="mb-1 block font-medium text-slate-700">Điểm đánh giá (1-5)</span>
               <input
                 name="rating"
                 type="number"
@@ -315,11 +315,11 @@ export function AdminTestimonialsManager({ items, databaseReady }: TestimonialsM
                 defaultChecked
                 className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
               />
-              Publish ngay
+              Hiển thị ngay
             </label>
           </div>
 
-          <SubmitButton label="Tạo testimonial" disabled={!databaseReady} />
+          <SubmitButton label="Tạo đánh giá" disabled={!databaseReady} />
           <ActionNotice state={createState} />
         </form>
       </section>
@@ -327,7 +327,7 @@ export function AdminTestimonialsManager({ items, databaseReady }: TestimonialsM
       <section className="space-y-3">
         {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            Chưa có testimonial nào.
+            Chưa có đánh giá nào.
           </div>
         ) : (
           items.map((item) => <TestimonialEditCard key={item.id} item={item} disabled={!databaseReady} />)

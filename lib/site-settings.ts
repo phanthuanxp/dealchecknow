@@ -14,6 +14,8 @@ export type PublicSiteSettings = {
   email: string;
   zaloNumber: string;
   zaloUrl: string;
+  servicePricingImageUrl: string;
+  servicePricingImageAlt: string;
 };
 
 const fallbackSettings: PublicSiteSettings = {
@@ -26,7 +28,9 @@ const fallbackSettings: PublicSiteSettings = {
   hotlineTel: "tel:0345076789",
   email: "info@taxininhbinh.com",
   zaloNumber: "0345076789",
-  zaloUrl: "https://zalo.me/0345076789"
+  zaloUrl: "https://zalo.me/0345076789",
+  servicePricingImageUrl: "/images/services/service-ha-noi.webp",
+  servicePricingImageAlt: "Xe taxi Ninh Binh phuc vu chuyen tuyen an toan"
 };
 
 function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> | null {
@@ -74,7 +78,8 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
             "site_tagline",
             "hotline",
             "contact_email",
-            "zalo_hotline"
+            "zalo_hotline",
+            "service_pricing_image"
           ]
         }
       }
@@ -117,6 +122,14 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
       hotlineValue;
     const zaloNumber = normalizePhone(zaloRaw);
     const zaloUrl = `https://zalo.me/${zaloNumber}`;
+    const servicePricingImageRecord = asRecord(map.get("service_pricing_image")?.value);
+    const servicePricingImageUrl =
+      getString(servicePricingImageRecord, "url") ??
+      getString(servicePricingImageRecord, "value") ??
+      fallbackSettings.servicePricingImageUrl;
+    const servicePricingImageAlt =
+      getString(servicePricingImageRecord, "alt") ??
+      fallbackSettings.servicePricingImageAlt;
 
     return {
       siteName,
@@ -128,7 +141,9 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
       hotlineTel,
       email,
       zaloNumber,
-      zaloUrl
+      zaloUrl,
+      servicePricingImageUrl,
+      servicePricingImageAlt
     };
   } catch {
     return fallbackSettings;

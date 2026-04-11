@@ -1,8 +1,21 @@
-import { tripTypeLabelMap, type QuoteRequestInput } from "@/lib/validation";
+import {
+  tripTypeLabelMap,
+  type QuoteRequestInput,
+  vehicleTypeLabelMap
+} from "@/lib/validation";
 
 type SendQuoteTelegramPayload = Pick<
   QuoteRequestInput,
-  "pickupLocation" | "dropoffLocation" | "tripType" | "contactPhoneZalo"
+  | "fullName"
+  | "pickupLocation"
+  | "stopovers"
+  | "dropoffLocation"
+  | "tripType"
+  | "vehicleType"
+  | "needVat"
+  | "desiredPrice"
+  | "contactPhoneZalo"
+  | "note"
 > & {
   pickupDateTime: Date;
   submittedAt: Date;
@@ -29,6 +42,19 @@ function formatDateTimeVN(value: Date | string) {
   }).format(typeof value === "string" ? new Date(value) : value);
 }
 
+function toReadablePrice(rawValue?: string) {
+  if (!rawValue) {
+    return "Không yêu cầu";
+  }
+
+  const digits = rawValue.replace(/[^\d]/g, "");
+  if (!digits) {
+    return rawValue;
+  }
+
+  return `${Number(digits).toLocaleString("vi-VN")} VNĐ`;
+}
+
 export async function sendQuoteRequestTelegram(payload: SendQuoteTelegramPayload): Promise<TelegramResult> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
   const chatId = process.env.TELEGRAM_CHAT_ID?.trim();
@@ -43,14 +69,26 @@ export async function sendQuoteRequestTelegram(payload: SendQuoteTelegramPayload
   const messageLines = [
     "<b>Yêu cầu báo giá mới</b>",
     "",
-    `<b>Điểm đi:</b> ${escapeHtml(payload.pickupLocation)}`,
+    `<b>Khách hàng:</b> ${escapeHtml(payload.fullName)}`,
+    `<b>Điểm đón:</b> ${escapeHtml(payload.pickupLocation)}`,
     `<b>Điểm đến:</b> ${escapeHtml(payload.dropoffLocation)}`,
     `<b>Ngày giờ đón:</b> ${escapeHtml(formatDateTimeVN(payload.pickupDateTime))}`,
     `<b>Loại chuyến:</b> ${escapeHtml(tripTypeLabelMap[payload.tripType])}`,
+    `<b>Loại xe:</b> ${escapeHtml(vehicleTypeLabelMap[payload.vehicleType])}`,
     `<b>Số điện thoại/Zalo:</b> ${escapeHtml(payload.contactPhoneZalo)}`,
+    `<b>Giá cước mong muốn:</b> ${escapeHtml(toReadablePrice(payload.desiredPrice))}`,
+    `<b>Xuất VAT:</b> ${payload.needVat ? "Có" : "Không"}`,
     `<b>Thời gian gửi:</b> ${escapeHtml(formatDateTimeVN(payload.submittedAt))}`,
     `<b>Nguồn website:</b> ${escapeHtml(payload.siteUrl)}`
   ];
+
+  if (payload.stopovers) {
+    messageLines.splice(3, 0, `<b>Điểm dừng:</b> ${escapeHtml(payload.stopovers)}`);
+  }
+
+  if (payload.note) {
+    messageLines.push(`<b>Ghi chú:</b> ${escapeHtml(payload.note)}`);
+  }
 
   try {
     const timeoutSignal = AbortSignal.timeout(8000);

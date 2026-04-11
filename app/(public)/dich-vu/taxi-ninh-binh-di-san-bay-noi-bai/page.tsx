@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
@@ -38,6 +39,14 @@ export default async function TaxiNinhBinhNoiBaiPage() {
           Dịch vụ chuyên tuyến Nội Bài dành cho khách bay sớm, khách bay đêm và khách cần khung giờ chính xác. Chúng
           tôi theo dõi thông tin chuyến để hỗ trợ lịch đón phù hợp.
         </p>
+        <Image
+          src="/images/cover-noi-bai.svg"
+          alt="Taxi Ninh Bình đi sân bay Nội Bài đúng giờ bay"
+          width={1200}
+          height={630}
+          className="mt-5 h-44 w-full rounded-2xl border border-teal-100 object-cover sm:h-56"
+          priority
+        />
         <div className="mt-5 flex flex-wrap gap-2">
           <Link
             href={settings.hotlineTel}
@@ -58,13 +67,27 @@ export default async function TaxiNinhBinhNoiBaiPage() {
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Hỗ trợ giờ bay linh hoạt</h2>
+          <Image
+            src="/images/car-suv.svg"
+            alt="Taxi Ninh Bình hỗ trợ chuyến sân bay linh hoạt"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Hỗ trợ giờ bay linh hoạt</h2>
           <p className="mt-2 text-sm text-slate-600">
             Có thể khởi hành theo nhiều khung giờ, kể cả sáng sớm và khuya để kịp lịch check-in.
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Phù hợp nhóm có hành lý</h2>
+          <Image
+            src="/images/cover-contact.svg"
+            alt="Taxi sân bay Nội Bài phù hợp nhóm có hành lý"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Phù hợp nhóm có hành lý</h2>
           <p className="mt-2 text-sm text-slate-600">
             Đề xuất loại xe phù hợp số người và hành lý để hành trình thoải mái, an toàn.
           </p>

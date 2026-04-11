@@ -30,6 +30,14 @@ type DbSectionWithBlocks = {
   }>;
 };
 
+type MediaAssetForEditor = {
+  id: string;
+  title: string;
+  url: string;
+  altText: string | null;
+  groupKey: string;
+};
+
 function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return {};
@@ -81,7 +89,7 @@ function buildTemplateBlockEditorData(
     return [];
   }
 
-  const blocksFromTemplate = sectionTemplate.blocks.map((blockTemplate) => {
+  return sectionTemplate.blocks.map((blockTemplate) => {
     const dbBlock = existingBlockMap.get(blockTemplate.blockKey);
     const dbContent = asRecord(dbBlock?.content);
     const defaultContent = blockTemplate.defaultContent;
@@ -98,6 +106,7 @@ function buildTemplateBlockEditorData(
         required: Boolean(field.required),
         placeholder: field.placeholder,
         helperText: field.helperText,
+        options: field.options,
         value: stringifyFieldValue(resolvedValue, field.type)
       };
     });
@@ -110,13 +119,11 @@ function buildTemplateBlockEditorData(
       title: dbBlock?.title ?? blockTemplate.label,
       isActive: dbBlock?.isActive ?? true,
       description: blockTemplate.description,
-      mode: "template" as const,
+      mode: "template",
       fields,
       rawJson: formatJson(dbBlock?.content ?? blockTemplate.defaultContent)
     };
   });
-
-  return blocksFromTemplate;
 }
 
 function buildRawBlockEditorData(block: DbSectionWithBlocks["blocks"][number]): HomeBlockEditorItem {
@@ -159,6 +166,7 @@ function buildTemplateOnlySections(): HomeSectionEditorItem[] {
         required: Boolean(field.required),
         placeholder: field.placeholder,
         helperText: field.helperText,
+        options: field.options,
         value: stringifyFieldValue(blockTemplate.defaultContent[field.key], field.type)
       })),
       rawJson: formatJson(blockTemplate.defaultContent)
@@ -166,28 +174,46 @@ function buildTemplateOnlySections(): HomeSectionEditorItem[] {
   }));
 }
 
-async function getEditorData(): Promise<{ sections: HomeSectionEditorItem[]; databaseReady: boolean }> {
+async function getEditorData(): Promise<{
+  sections: HomeSectionEditorItem[];
+  mediaAssets: MediaAssetForEditor[];
+  databaseReady: boolean;
+}> {
   if (!process.env.DATABASE_URL) {
     return {
       sections: buildTemplateOnlySections(),
+      mediaAssets: [],
       databaseReady: false
     };
   }
 
   try {
-    const dbSections = await prisma.siteSection.findMany({
-      where: {
-        key: {
-          startsWith: "home-"
+    const [dbSections, mediaAssets] = await Promise.all([
+      prisma.siteSection.findMany({
+        where: {
+          key: {
+            startsWith: "home-"
+          }
+        },
+        include: {
+          blocks: {
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+          }
+        },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+      }),
+      prisma.mediaAsset.findMany({
+        where: { isActive: true },
+        orderBy: [{ groupKey: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          title: true,
+          url: true,
+          altText: true,
+          groupKey: true
         }
-      },
-      include: {
-        blocks: {
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
-        }
-      },
-      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
-    });
+      })
+    ]);
 
     const dbSectionMap = new Map<string, DbSectionWithBlocks>();
     for (const section of dbSections) {
@@ -231,30 +257,32 @@ async function getEditorData(): Promise<{ sections: HomeSectionEditorItem[]; dat
 
     return {
       sections: [...templateSections, ...customSections].sort((a, b) => a.sortOrder - b.sortOrder),
+      mediaAssets,
       databaseReady: true
     };
   } catch {
     return {
       sections: buildTemplateOnlySections(),
+      mediaAssets: [],
       databaseReady: false
     };
   }
 }
 
 export default async function AdminBlocksPage() {
-  const { sections, databaseReady } = await getEditorData();
+  const { sections, mediaAssets, databaseReady } = await getEditorData();
 
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý blocks nội dung trang chủ</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Landing Editor trang chủ</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Chỉnh sửa trực tiếp nội dung section và block đang dùng ở homepage (hero, badge, CTA, mô tả section, footer
-          text). Sau khi lưu thành công, public site sẽ nhận dữ liệu mới từ SQL.
+          Kéo thả để đổi bố cục section và block, chỉnh nội dung trực tiếp, thay ảnh ngay trong từng block bằng cách
+          chọn từ thư viện hoặc upload trực tiếp. Sau khi lưu, trang công khai cập nhật ngay từ SQL.
         </p>
       </section>
 
-      <AdminBlocksEditor sections={sections} databaseReady={databaseReady} />
+      <AdminBlocksEditor sections={sections} mediaAssets={mediaAssets} databaseReady={databaseReady} />
     </div>
   );
 }

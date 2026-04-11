@@ -108,7 +108,7 @@ function FaqEditCard({ item, disabled }: { item: FaqItem; disabled: boolean }) {
             item.isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
           )}
         >
-          {item.isActive ? "Published" : "Ẩn"}
+          {item.isActive ? "Đang hiển thị" : "Ẩn"}
         </span>
       </div>
 
@@ -163,12 +163,12 @@ function FaqEditCard({ item, disabled }: { item: FaqItem; disabled: boolean }) {
               defaultChecked={item.isActive}
               className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
             />
-            Publish ra public
+            Hiển thị ngoài trang công khai
           </label>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <SubmitButton label="Lưu FAQ" disabled={disabled} />
+          <SubmitButton label="Lưu mục hỏi đáp" disabled={disabled} />
         </div>
 
         <ActionNotice state={updateState} />
@@ -195,7 +195,7 @@ export function AdminFaqManager({ items, databaseReady }: FaqManagerProps) {
       ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <h2 className="text-lg font-semibold text-slate-900">Tạo FAQ mới</h2>
+        <h2 className="text-lg font-semibold text-slate-900">Tạo mục hỏi đáp mới</h2>
         <form action={createAction} className="mt-3 space-y-3">
           <label className="text-sm">
             <span className="mb-1 block font-medium text-slate-700">Câu hỏi</span>
@@ -245,10 +245,10 @@ export function AdminFaqManager({ items, databaseReady }: FaqManagerProps) {
               defaultChecked
               className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
             />
-            Publish ngay sau khi tạo
+            Hiển thị ngay sau khi tạo
           </label>
 
-          <SubmitButton label="Tạo FAQ" disabled={!databaseReady} />
+          <SubmitButton label="Tạo mục hỏi đáp" disabled={!databaseReady} />
           <ActionNotice state={createState} />
         </form>
       </section>
@@ -256,7 +256,7 @@ export function AdminFaqManager({ items, databaseReady }: FaqManagerProps) {
       <section className="space-y-3">
         {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-            Chưa có FAQ nào.
+            Chưa có mục hỏi đáp nào.
           </div>
         ) : (
           items.map((item) => <FaqEditCard key={item.id} item={item} disabled={!databaseReady} />)

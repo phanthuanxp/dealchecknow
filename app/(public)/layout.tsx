@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Script from "next/script";
 
 import { FloatingContact } from "@/components/public/floating-contact";
 import { PublicFooter } from "@/components/public/footer";
@@ -9,11 +10,27 @@ type PublicLayoutProps = {
   children: ReactNode;
 };
 
+export const dynamic = "force-dynamic";
+
 export default function PublicLayout({ children }: PublicLayoutProps) {
+  const googleAdsTagId = "AW-11324459657";
+
   return (
     <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsTagId}`}
+        strategy="afterInteractive"
+      />
+      <Script id="google-ads-gtag" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${googleAdsTagId}');
+        `}
+      </Script>
       <PublicHeader />
-      <main className="pb-24 md:pb-0">{children}</main>
+      <main className="pb-24 pt-0 md:pb-0">{children}</main>
       <PublicFooter />
       <FloatingContact />
       <MobileStickyBar />

@@ -13,7 +13,7 @@ const fallbackFooterContent: FooterContentData = {
   companyName: "Taxi Ninh Bình",
   description: "Dịch vụ taxi và xe du lịch chuyên nghiệp, hỗ trợ đặt xe nhanh 24/7.",
   serviceAreas: ["TP Ninh Bình", "Tam Cốc", "Tràng An", "Bái Đính", "Hoa Lư", "Kim Sơn"],
-  bottomNote: "© {year} Taxi Ninh Bình. All rights reserved."
+  bottomNote: "© {year} Taxi Ninh Bình. Bản quyền thuộc về Taxi Ninh Bình."
 };
 
 function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> | null {

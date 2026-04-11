@@ -46,7 +46,7 @@ export default async function AdminTestimonialsPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý đánh giá khách hàng</h1>
         <p className="mt-2 text-sm text-slate-600">
-          CRUD đầy đủ testimonial, gồm đánh dấu nổi bật và publish/unpublish để kiểm soát hiển thị trên trang chủ.
+          Quản lý đầy đủ đánh giá khách hàng, gồm đánh dấu nổi bật và bật hoặc tắt hiển thị trên trang chủ.
         </p>
       </section>
 

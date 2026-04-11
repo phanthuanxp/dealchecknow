@@ -1,0 +1,18 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" rx="36" fill="url(#bg)"/>
+  <rect x="86" y="82" width="332" height="54" rx="27" fill="#DCFCE7"/>
+  <text x="126" y="117" fill="#047857" font-size="28" font-family="Segoe UI, Arial, sans-serif" font-weight="700">Taxi đường dài</text>
+  <text x="86" y="232" fill="#0F172A" font-size="64" font-family="Segoe UI, Arial, sans-serif" font-weight="800">Lộ trình liên tỉnh</text>
+  <text x="86" y="306" fill="#0F172A" font-size="64" font-family="Segoe UI, Arial, sans-serif" font-weight="800">linh hoạt theo yêu cầu</text>
+  <path d="M84 476H1118" stroke="#94A3B8" stroke-width="10" stroke-linecap="round"/>
+  <path d="M930 420C972 380 1046 360 1110 364" stroke="#2563EB" stroke-width="8" stroke-linecap="round"/>
+  <rect x="748" y="360" width="292" height="122" rx="24" fill="#10B981"/>
+  <circle cx="786" cy="504" r="24" fill="#111827"/>
+  <circle cx="1004" cy="504" r="24" fill="#111827"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0FDF4"/>
+      <stop offset="1" stop-color="#E0F2FE"/>
+    </linearGradient>
+  </defs>
+</svg>

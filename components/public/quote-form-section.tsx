@@ -1,10 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
+import {
+  CalendarIcon,
+  CarIcon,
+  MapPinIcon,
+  MoneyIcon,
+  PhoneCallIcon,
+  PlusIcon,
+  UserIcon
+} from "@/components/public/ui-icons";
 import { cn } from "@/lib/utils";
-import { quoteRequestSchema, tripTypeLabelMap, type QuoteRequestInput } from "@/lib/validation";
+import {
+  quoteRequestSchema,
+  type QuoteRequestInput,
+  vehicleTypeLabelMap
+} from "@/lib/validation";
 
 type QuoteSectionData = {
   title: string;
@@ -15,7 +27,7 @@ type QuoteSectionData = {
 type QuoteFormSectionProps = {
   data: QuoteSectionData;
   hotlineDisplay: string;
-  hotlineTel: string;
+  className?: string;
 };
 
 type QuoteApiResponse = {
@@ -43,21 +55,64 @@ function getDefaultPickupDateTime() {
   return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 const initialFormValues: QuoteRequestInput = {
   pickupLocation: "",
+  stopovers: undefined,
   dropoffLocation: "",
   pickupDateTime: getDefaultPickupDateTime(),
+  vehicleType: "SEDAN_4",
   tripType: "ONE_WAY",
-  contactPhoneZalo: ""
+  needVat: false,
+  desiredPrice: undefined,
+  fullName: "",
+  contactPhoneZalo: "",
+  note: undefined
 };
 
-export function QuoteFormSection({ data, hotlineDisplay, hotlineTel }: QuoteFormSectionProps) {
+export function QuoteFormSection({ data, hotlineDisplay, className }: QuoteFormSectionProps) {
   const [formValues, setFormValues] = useState<QuoteRequestInput>(initialFormValues);
   const [status, setStatus] = useState<FormStatus>("idle");
   const [submitMessage, setSubmitMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [showStopoverField, setShowStopoverField] = useState(false);
 
   const isSubmitting = status === "loading";
+
+  const mainTitle = useMemo(() => {
+    const rawTitle = data.title?.trim();
+
+    if (!rawTitle) {
+      return "Đặt Xe & Nhận Báo Giá";
+    }
+
+    if (normalizeText(rawTitle).includes("nhan bao gia nhanh theo lo trinh")) {
+      return "Đặt Xe & Nhận Báo Giá";
+    }
+
+    return rawTitle;
+  }, [data.title]);
+
+  const mainDescription = useMemo(() => {
+    const rawDescription = data.description?.trim();
+
+    if (!rawDescription) {
+      return "Điền thông tin chuyến đi để đề xuất mức giá hợp lý";
+    }
+
+    if (normalizeText(rawDescription).includes("dien thong tin chuyen di de nhan tu van va bao gia phu hop")) {
+      return "Điền thông tin chuyến đi để đề xuất mức giá hợp lý";
+    }
+
+    return rawDescription;
+  }, [data.description]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,6 +159,7 @@ export function QuoteFormSection({ data, hotlineDisplay, hotlineTel }: QuoteForm
         ...initialFormValues,
         pickupDateTime: getDefaultPickupDateTime()
       });
+      setShowStopoverField(false);
     } catch {
       setStatus("error");
       setSubmitMessage("Kết nối không ổn định. Vui lòng thử lại sau ít phút.");
@@ -115,40 +171,43 @@ export function QuoteFormSection({ data, hotlineDisplay, hotlineTel }: QuoteForm
   }
 
   return (
-    <section id="bao-gia" className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">{data.title}</h2>
-          <p className="mt-2 text-sm text-slate-600">{data.description}</p>
-        </div>
-        <Link
-          href={hotlineTel}
-          className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
-        >
-          Gọi nhanh: {hotlineDisplay}
-        </Link>
+    <section
+      id="bao-gia"
+      className={cn(
+        "mt-6 rounded-[28px] border-2 border-sky-600/35 bg-white/95 p-4 shadow-sm sm:p-5 lg:h-full",
+        className
+      )}
+    >
+      <div className="text-center">
+        <h2 className="bg-gradient-to-r from-blue-700 to-sky-500 bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
+          {mainTitle}
+        </h2>
+        <p className="mt-1.5 text-sm font-medium text-slate-600">{mainDescription}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 grid gap-3 sm:grid-cols-2" noValidate>
+      <form onSubmit={handleSubmit} className="mt-4 space-y-2.5" noValidate>
         <div>
-          <label htmlFor="pickupLocation" className="mb-1 block text-sm font-medium text-slate-700">
-            Điểm đi
+          <label htmlFor="pickupLocation" className="mb-1 block text-sm font-semibold text-slate-900">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPinIcon className="h-4 w-4 text-rose-500" />
+              Điểm đón *
+            </span>
           </label>
           <input
             id="pickupLocation"
             name="pickupLocation"
             type="text"
             required
-            placeholder="Ví dụ: TP Ninh Bình, Ga Ninh Bình..."
+            placeholder="Nhập địa chỉ đón"
             value={formValues.pickupLocation}
             onChange={(event) =>
               setFormValues((prev) => ({ ...prev, pickupLocation: event.target.value }))
             }
             className={cn(
-              "w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2",
+              "w-full rounded-xl border px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
               getError("pickupLocation")
                 ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
-                : "border-slate-300 focus:border-teal-600 focus:ring-teal-200"
+                : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
             )}
           />
           {getError("pickupLocation") ? (
@@ -156,25 +215,66 @@ export function QuoteFormSection({ data, hotlineDisplay, hotlineTel }: QuoteForm
           ) : null}
         </div>
 
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={() => setShowStopoverField((prev) => !prev)}
+            className="inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 transition hover:text-indigo-800"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {showStopoverField ? "Ẩn điểm dừng" : "Thêm điểm dừng"}
+          </button>
+        </div>
+
+        {showStopoverField ? (
+          <div>
+            <label htmlFor="stopovers" className="mb-1 block text-sm font-semibold text-slate-900">
+              Điểm dừng
+            </label>
+            <input
+              id="stopovers"
+              name="stopovers"
+              type="text"
+              placeholder="Ví dụ: qua bến xe, qua khách sạn..."
+              value={formValues.stopovers ?? ""}
+              onChange={(event) =>
+                setFormValues((prev) => ({ ...prev, stopovers: event.target.value }))
+              }
+              className={cn(
+                "w-full rounded-xl border px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
+                getError("stopovers")
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
+                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
+              )}
+            />
+            {getError("stopovers") ? (
+              <p className="mt-1 text-xs text-rose-600">{getError("stopovers")}</p>
+            ) : null}
+          </div>
+        ) : null}
+
         <div>
-          <label htmlFor="dropoffLocation" className="mb-1 block text-sm font-medium text-slate-700">
-            Điểm đến
+          <label htmlFor="dropoffLocation" className="mb-1 block text-sm font-semibold text-slate-900">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPinIcon className="h-4 w-4 text-rose-500" />
+              Điểm đến *
+            </span>
           </label>
           <input
             id="dropoffLocation"
             name="dropoffLocation"
             type="text"
             required
-            placeholder="Ví dụ: Tam Cốc, Tràng An, Nội Bài..."
+            placeholder="Nhập địa chỉ đến"
             value={formValues.dropoffLocation}
             onChange={(event) =>
               setFormValues((prev) => ({ ...prev, dropoffLocation: event.target.value }))
             }
             className={cn(
-              "w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2",
+              "w-full rounded-xl border px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
               getError("dropoffLocation")
                 ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
-                : "border-slate-300 focus:border-teal-600 focus:ring-teal-200"
+                : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
             )}
           />
           {getError("dropoffLocation") ? (
@@ -182,120 +282,231 @@ export function QuoteFormSection({ data, hotlineDisplay, hotlineTel }: QuoteForm
           ) : null}
         </div>
 
-        <div>
-          <label htmlFor="pickupDateTime" className="mb-1 block text-sm font-medium text-slate-700">
-            Ngày giờ đón
-          </label>
-          <input
-            id="pickupDateTime"
-            name="pickupDateTime"
-            type="datetime-local"
-            required
-            value={formValues.pickupDateTime}
-            onChange={(event) =>
-              setFormValues((prev) => ({ ...prev, pickupDateTime: event.target.value }))
-            }
-            className={cn(
-              "w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2",
-              getError("pickupDateTime")
-                ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
-                : "border-slate-300 focus:border-teal-600 focus:ring-teal-200"
-            )}
-          />
-          {getError("pickupDateTime") ? (
-            <p className="mt-1 text-xs text-rose-600">{getError("pickupDateTime")}</p>
-          ) : null}
-        </div>
-
-        <div>
-          <p className="mb-1 block text-sm font-medium text-slate-700">Loại chuyến</p>
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(tripTypeLabelMap) as Array<QuoteRequestInput["tripType"]>).map((type) => (
-              <label
-                key={type}
-                className={cn(
-                  "flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2.5 text-sm font-medium transition",
-                  formValues.tripType === type
-                    ? "border-teal-600 bg-teal-50 text-teal-700"
-                    : "border-slate-300 text-slate-700 hover:border-teal-300"
-                )}
-              >
-                <input
-                  type="radio"
-                  name="tripType"
-                  value={type}
-                  checked={formValues.tripType === type}
-                  onChange={() => setFormValues((prev) => ({ ...prev, tripType: type }))}
-                  className="sr-only"
-                />
-                {tripTypeLabelMap[type]}
-              </label>
-            ))}
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="pickupDateTime" className="mb-1 block text-sm font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarIcon className="h-4 w-4 text-indigo-500" />
+                Ngày giờ đón *
+              </span>
+            </label>
+            <input
+              id="pickupDateTime"
+              name="pickupDateTime"
+              type="datetime-local"
+              required
+              value={formValues.pickupDateTime}
+              onChange={(event) =>
+                setFormValues((prev) => ({ ...prev, pickupDateTime: event.target.value }))
+              }
+              className={cn(
+                "quote-datetime-input min-w-0 w-full rounded-xl border px-3 py-2.5 text-sm text-slate-900 outline-none transition sm:px-3.5 sm:text-base focus:ring-2",
+                getError("pickupDateTime")
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
+                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
+              )}
+            />
+            {getError("pickupDateTime") ? (
+              <p className="mt-1 text-xs text-rose-600">{getError("pickupDateTime")}</p>
+            ) : null}
           </div>
-          {getError("tripType") ? <p className="mt-1 text-xs text-rose-600">{getError("tripType")}</p> : null}
+
+          <div>
+            <label htmlFor="vehicleType" className="mb-1 block text-sm font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-1.5">
+                <CarIcon className="h-4 w-4 text-indigo-500" />
+                Loại xe *
+              </span>
+            </label>
+            <select
+              id="vehicleType"
+              name="vehicleType"
+              value={formValues.vehicleType}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  vehicleType: event.target.value as QuoteRequestInput["vehicleType"]
+                }))
+              }
+              className={cn(
+                "w-full rounded-xl border bg-white px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
+                getError("vehicleType")
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
+                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
+              )}
+            >
+              {(Object.keys(vehicleTypeLabelMap) as Array<QuoteRequestInput["vehicleType"]>).map((type) => (
+                <option key={type} value={type}>
+                  {vehicleTypeLabelMap[type]}
+                </option>
+              ))}
+            </select>
+            {getError("vehicleType") ? (
+              <p className="mt-1 text-xs text-rose-600">{getError("vehicleType")}</p>
+            ) : null}
+          </div>
         </div>
 
-        <div className="sm:col-span-2">
-          <label htmlFor="contactPhoneZalo" className="mb-1 block text-sm font-medium text-slate-700">
-            Số điện thoại / Zalo
+        <div className="flex flex-wrap justify-start gap-5 pt-0.5">
+          <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <input
+              type="checkbox"
+              checked={formValues.tripType === "ROUND_TRIP"}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  tripType: event.target.checked ? "ROUND_TRIP" : "ONE_WAY"
+                }))
+              }
+              className="h-4.5 w-4.5 rounded border-slate-300 text-sky-600 focus:ring-sky-400"
+            />
+            Hai chiều
+          </label>
+
+          <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <input
+              type="checkbox"
+              checked={Boolean(formValues.needVat)}
+              onChange={(event) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  needVat: event.target.checked
+                }))
+              }
+              className="h-4.5 w-4.5 rounded border-slate-300 text-sky-600 focus:ring-sky-400"
+            />
+            Xuất hóa đơn (VAT)
+          </label>
+        </div>
+
+        <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50 p-3">
+          <label htmlFor="desiredPrice" className="mb-1 block text-sm font-bold text-emerald-900">
+            <span className="inline-flex items-center gap-1.5">
+              <MoneyIcon className="h-4 w-4 text-emerald-600" />
+              Giá cước mong muốn (VNĐ)
+            </span>
           </label>
           <input
-            id="contactPhoneZalo"
-            name="contactPhoneZalo"
-            type="tel"
-            required
-            placeholder={hotlineDisplay}
-            value={formValues.contactPhoneZalo}
+            id="desiredPrice"
+            name="desiredPrice"
+            type="text"
+            inputMode="numeric"
+            placeholder="Nhập mức giá bạn mong muốn"
+            value={formValues.desiredPrice ?? ""}
             onChange={(event) =>
-              setFormValues((prev) => ({ ...prev, contactPhoneZalo: event.target.value }))
+              setFormValues((prev) => ({ ...prev, desiredPrice: event.target.value }))
             }
             className={cn(
-              "w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:ring-2",
-              getError("contactPhoneZalo")
+              "w-full rounded-xl border bg-white px-3.5 py-2.5 text-base font-semibold text-slate-900 outline-none transition focus:ring-2",
+              getError("desiredPrice")
                 ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
-                : "border-slate-300 focus:border-teal-600 focus:ring-teal-200"
+                : "border-emerald-300 focus:border-emerald-500 focus:ring-emerald-100"
             )}
           />
-          {getError("contactPhoneZalo") ? (
-            <p className="mt-1 text-xs text-rose-600">{getError("contactPhoneZalo")}</p>
+          {getError("desiredPrice") ? (
+            <p className="mt-1 text-xs text-rose-600">{getError("desiredPrice")}</p>
           ) : (
-            <p className="mt-1 text-xs text-slate-500">Đội ngũ sẽ gọi hoặc nhắn Zalo qua số bạn cung cấp.</p>
+            <p className="mt-1 text-[11px] font-medium text-emerald-800">
+              Nhập mức giá dự kiến để đội ngũ tư vấn tuyến xe phù hợp nhanh hơn.
+            </p>
           )}
         </div>
 
-        <div className="sm:col-span-2">
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="fullName" className="mb-1 block text-sm font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-1.5">
+                <UserIcon className="h-4 w-4 text-indigo-500" />
+                Tên của bạn *
+              </span>
+            </label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              required
+              placeholder="Nhập họ và tên"
+              value={formValues.fullName}
+              onChange={(event) =>
+                setFormValues((prev) => ({ ...prev, fullName: event.target.value }))
+              }
+              className={cn(
+                "w-full rounded-xl border px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
+                getError("fullName")
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
+                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
+              )}
+            />
+            {getError("fullName") ? (
+              <p className="mt-1 text-xs text-rose-600">{getError("fullName")}</p>
+            ) : null}
+          </div>
+
+          <div>
+            <label htmlFor="contactPhoneZalo" className="mb-1 block text-sm font-semibold text-slate-900">
+              <span className="inline-flex items-center gap-1.5">
+                <PhoneCallIcon className="h-4 w-4 text-pink-600" />
+                Số điện thoại / Zalo *
+              </span>
+            </label>
+            <input
+              id="contactPhoneZalo"
+              name="contactPhoneZalo"
+              type="tel"
+              required
+              placeholder={hotlineDisplay}
+              value={formValues.contactPhoneZalo}
+              onChange={(event) =>
+                setFormValues((prev) => ({ ...prev, contactPhoneZalo: event.target.value }))
+              }
+              className={cn(
+                "w-full rounded-xl border px-3.5 py-2.5 text-base text-slate-900 outline-none transition focus:ring-2",
+                getError("contactPhoneZalo")
+                  ? "border-rose-300 focus:border-rose-500 focus:ring-rose-100"
+                  : "border-slate-300 focus:border-sky-500 focus:ring-sky-100"
+              )}
+            />
+            {getError("contactPhoneZalo") ? (
+              <p className="mt-1 text-xs text-rose-600">{getError("contactPhoneZalo")}</p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="pt-1">
           <button
             type="submit"
             disabled={isSubmitting}
             className={cn(
-              "inline-flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold text-white transition sm:w-auto",
-              isSubmitting ? "cursor-not-allowed bg-slate-400" : "bg-teal-700 hover:bg-teal-800"
+              "inline-flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-blue-700 to-cyan-500 px-4 py-3 text-2xl font-bold text-white transition",
+              isSubmitting
+                ? "cursor-not-allowed opacity-70"
+                : "hover:from-blue-800 hover:to-cyan-600"
             )}
           >
-            {isSubmitting ? "Đang gửi yêu cầu..." : "Nhận báo giá ngay"}
+            {isSubmitting ? "Đang gửi yêu cầu..." : "Đặt Giá Mong Muốn"}
           </button>
         </div>
       </form>
 
       {status === "success" ? (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+        <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
           {submitMessage}
         </div>
       ) : null}
 
       {status === "warning" ? (
-        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
           {submitMessage}
         </div>
       ) : null}
 
       {status === "error" ? (
-        <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+        <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
           {submitMessage}
         </div>
       ) : null}
 
-      <p className="mt-3 text-xs text-slate-500">{data.note}</p>
+      <p className="mt-2.5 text-xs text-slate-500">{data.note}</p>
     </section>
   );
 }

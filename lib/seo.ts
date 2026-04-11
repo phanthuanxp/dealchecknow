@@ -42,7 +42,7 @@ const FALLBACK_SITE_URL = "https://taxininhbinh.com";
 const FALLBACK_SITE_NAME = "Taxi Ninh Bình";
 const FALLBACK_EMAIL = "info@taxininhbinh.com";
 const FALLBACK_HOTLINE = "0345076789";
-const DEFAULT_OG_IMAGE = "/opengraph-image.png";
+const DEFAULT_OG_IMAGE = "/opengraph-image.svg";
 
 const DEFAULT_SERVICE_AREAS = [
   "Ninh Bình",
@@ -195,6 +195,41 @@ export function createOrganizationSchema(seo: SeoContext) {
         availableLanguage: ["vi"]
       }
     ]
+  };
+}
+
+export function createLocalBusinessSchema(seo: SeoContext) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${seo.siteUrl}#local-business`,
+    name: seo.siteName,
+    url: seo.siteUrl,
+    telephone: seo.hotline,
+    email: seo.email,
+    areaServed: seo.serviceArea,
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "VN",
+      addressRegion: "Ninh Bình"
+    },
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ],
+        opens: "00:00",
+        closes: "23:59"
+      }
+    ],
+    sameAs: [`https://zalo.me/${seo.zaloNumber}`]
   };
 }
 

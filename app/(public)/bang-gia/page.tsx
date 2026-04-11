@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { getPublicPricingItems } from "@/lib/public-content";
+import { PricingSection } from "@/components/public/pricing-section";
+import { ChatIcon, PhoneCallIcon, RouteIcon } from "@/components/public/ui-icons";
+import { getPublicPricingItems, getPublicPricingSectionMeta } from "@/lib/public-content";
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
 import { getPublicSiteSettings } from "@/lib/site-settings";
 
@@ -9,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return createPageMetadata({
     title: "Bảng Giá Taxi Ninh Bình",
     description:
-      "Bảng giá tham khảo dịch vụ taxi Ninh Bình: taxi Ninh Bình đi Hà Nội, taxi Ninh Bình đi sân bay Nội Bài, taxi Tam Cốc, Tràng An, Bái Đính.",
+      "Bảng giá taxi Ninh Bình tham khảo cho các tuyến phổ biến: Ninh Bình đi Hà Nội, Ninh Bình đi sân bay Nội Bài, Tam Cốc, Tràng An, Bái Đính.",
     path: "/bang-gia",
     keywords: [
       "bảng giá taxi ninh bình",
@@ -20,66 +22,46 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-function formatCurrency(price: number, currency: string) {
-  if (currency.toUpperCase() === "VND") {
-    return `${new Intl.NumberFormat("vi-VN").format(price)}đ`;
-  }
-  return `${new Intl.NumberFormat("vi-VN").format(price)} ${currency}`;
-}
-
 export default async function PricingPage() {
-  const [pricingItems, seo, settings] = await Promise.all([
+  const [pricingItems, pricingMeta, seo, settings] = await Promise.all([
     getPublicPricingItems(),
+    getPublicPricingSectionMeta(),
     getSeoContext(),
     getPublicSiteSettings()
   ]);
+
   const breadcrumbSchema = createBreadcrumbSchema(seo.siteUrl, [
     { name: "Trang chủ", path: "/" },
     { name: "Bảng giá", path: "/bang-gia" }
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+    <div className="mx-auto w-[90%] py-6 sm:py-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       <section className="rounded-3xl border border-teal-100 bg-white p-6 shadow-sm sm:p-10">
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-4xl">Bảng giá taxi Ninh Bình tham khảo</h1>
+        <p className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700">
+          <RouteIcon className="h-3.5 w-3.5" />
+          Bảng giá tham khảo
+        </p>
+        <h1 className="mt-3 text-2xl font-bold text-slate-900 sm:text-4xl">
+          Bảng giá taxi Ninh Bình theo tuyến phổ biến
+        </h1>
         <p className="mt-3 max-w-3xl text-sm text-slate-600 sm:text-base">
           Mức giá dưới đây giúp bạn ước lượng chi phí trước chuyến đi. Giá thực tế có thể thay đổi theo thời điểm,
-          loại xe, điểm đón và yêu cầu cụ thể.
+          điểm đón và yêu cầu phát sinh của từng lịch trình.
         </p>
       </section>
 
-      {pricingItems.length === 0 ? (
-        <section className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
-          Chưa có dữ liệu bảng giá. Vui lòng gọi hotline để nhận tư vấn và báo giá nhanh.
-        </section>
-      ) : (
-        <section className="mt-6 grid gap-3 sm:grid-cols-2">
-          {pricingItems.map((item) => (
-            <article
-              key={item.id}
-              className={`rounded-2xl border p-4 ${
-                item.isPopular ? "border-teal-300 bg-teal-50" : "border-slate-200 bg-white"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="text-base font-semibold text-slate-900">{item.routeName}</h2>
-                {item.isPopular ? (
-                  <span className="rounded-full bg-teal-700 px-2 py-1 text-xs font-semibold text-white">Phổ biến</span>
-                ) : null}
-              </div>
-              <p className="mt-2 text-sm text-slate-600">
-                {item.fromLocation} → {item.toLocation}
-              </p>
-              <p className="mt-1 text-sm text-slate-600">{item.vehicleType}</p>
-              <p className="mt-3 text-xl font-bold text-teal-800">{formatCurrency(item.price, item.currency)}</p>
-              <p className="text-xs text-slate-500">/ {item.unit}</p>
-              {item.description ? <p className="mt-2 text-sm text-slate-600">{item.description}</p> : null}
-            </article>
-          ))}
-        </section>
-      )}
+      <PricingSection
+        data={{
+          title: pricingMeta.title,
+          description: pricingMeta.description,
+          note: pricingMeta.note,
+          items: pricingItems
+        }}
+        hotlineTel={settings.hotlineTel}
+      />
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Bạn có thể xem thêm</h2>
@@ -102,7 +84,10 @@ export default async function PricingPage() {
           >
             Thuê xe du lịch Ninh Bình
           </Link>
-          <Link href="/#bao-gia" className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-teal-700 hover:underline">
+          <Link
+            href="/#bao-gia"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-teal-700 hover:underline"
+          >
             Gửi yêu cầu báo giá chi tiết
           </Link>
         </div>
@@ -113,16 +98,18 @@ export default async function PricingPage() {
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={settings.hotlineTel}
-            className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
           >
+            <PhoneCallIcon className="h-4 w-4" />
             Gọi {settings.hotlineDisplay}
           </Link>
           <Link
             href={settings.zaloUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white"
+            className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white"
           >
+            <ChatIcon className="h-4 w-4" />
             Chat Zalo
           </Link>
         </div>

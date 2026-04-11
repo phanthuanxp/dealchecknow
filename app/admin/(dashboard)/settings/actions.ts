@@ -19,10 +19,10 @@ const settingsSchema = z.object({
   siteDomain: z
     .string()
     .trim()
-    .min(4, "Domain không hợp lệ.")
-    .max(120, "Domain quá dài.")
-    .regex(/^(?:https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i, "Domain không hợp lệ."),
-  siteTagline: z.string().trim().min(5, "Tagline cần ít nhất 5 ký tự.").max(200, "Tagline quá dài."),
+    .min(4, "Tên miền không hợp lệ.")
+    .max(120, "Tên miền quá dài.")
+    .regex(/^(?:https?:\/\/)?[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i, "Tên miền không hợp lệ."),
+  siteTagline: z.string().trim().min(5, "Khẩu hiệu cần ít nhất 5 ký tự.").max(200, "Khẩu hiệu quá dài."),
   hotlineValue: z
     .string()
     .trim()
@@ -36,7 +36,15 @@ const settingsSchema = z.object({
     .trim()
     .min(8, "Số Zalo không hợp lệ.")
     .max(20, "Số Zalo không hợp lệ.")
-    .regex(/^[+0-9().\s-]+$/, "Số Zalo không hợp lệ.")
+    .regex(/^[+0-9().\s-]+$/, "Số Zalo không hợp lệ."),
+  servicePricingImageUrl: z
+    .string()
+    .trim()
+    .max(500, "URL ảnh quá dài.")
+    .refine((value) => value.length === 0 || /^https?:\/\/.+/i.test(value) || value.startsWith("/"), {
+      message: "URL ảnh cần là link http(s) hoặc đường dẫn bắt đầu bằng /."
+    }),
+  servicePricingImageAlt: z.string().trim().max(300, "Mô tả ảnh quá dài.")
 });
 
 function normalizePhone(value: string) {
@@ -92,7 +100,9 @@ export async function updateSiteSettingsAction(
     hotlineValue: String(formData.get("hotlineValue") ?? ""),
     hotlineDisplay: String(formData.get("hotlineDisplay") ?? ""),
     email: String(formData.get("email") ?? ""),
-    zaloNumber: String(formData.get("zaloNumber") ?? "")
+    zaloNumber: String(formData.get("zaloNumber") ?? ""),
+    servicePricingImageUrl: String(formData.get("servicePricingImageUrl") ?? ""),
+    servicePricingImageAlt: String(formData.get("servicePricingImageAlt") ?? "")
   });
 
   if (!parsed.success) {
@@ -102,6 +112,8 @@ export async function updateSiteSettingsAction(
   const siteDomain = normalizeDomain(parsed.data.siteDomain);
   const hotlineValue = normalizePhone(parsed.data.hotlineValue);
   const zaloNumber = normalizePhone(parsed.data.zaloNumber);
+  const servicePricingImageUrl = parsed.data.servicePricingImageUrl.trim();
+  const servicePricingImageAlt = parsed.data.servicePricingImageAlt.trim();
 
   try {
     await prisma.$transaction([
@@ -109,14 +121,14 @@ export async function updateSiteSettingsAction(
         where: { key: "site_name" },
         update: {
           value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
-          description: "Public website name",
+          description: "Tên website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
           key: "site_name",
           value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
-          description: "Public website name",
+          description: "Tên website công khai",
           groupKey: "general",
           isPublic: true
         }
@@ -125,14 +137,14 @@ export async function updateSiteSettingsAction(
         where: { key: "site_domain" },
         update: {
           value: { value: siteDomain } as Prisma.InputJsonValue,
-          description: "Public website domain",
+          description: "Tên miền website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
           key: "site_domain",
           value: { value: siteDomain } as Prisma.InputJsonValue,
-          description: "Public website domain",
+          description: "Tên miền website công khai",
           groupKey: "general",
           isPublic: true
         }
@@ -141,14 +153,14 @@ export async function updateSiteSettingsAction(
         where: { key: "site_tagline" },
         update: {
           value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
-          description: "Public website tagline",
+          description: "Khẩu hiệu website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
           key: "site_tagline",
           value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
-          description: "Public website tagline",
+          description: "Khẩu hiệu website công khai",
           groupKey: "general",
           isPublic: true
         }
@@ -160,7 +172,7 @@ export async function updateSiteSettingsAction(
             value: hotlineValue,
             display: parsed.data.hotlineDisplay
           } as Prisma.InputJsonValue,
-          description: "Primary hotline number",
+          description: "Số hotline chính",
           groupKey: "contact",
           isPublic: true
         },
@@ -170,7 +182,7 @@ export async function updateSiteSettingsAction(
             value: hotlineValue,
             display: parsed.data.hotlineDisplay
           } as Prisma.InputJsonValue,
-          description: "Primary hotline number",
+          description: "Số hotline chính",
           groupKey: "contact",
           isPublic: true
         }
@@ -179,14 +191,14 @@ export async function updateSiteSettingsAction(
         where: { key: "contact_email" },
         update: {
           value: { value: parsed.data.email } as Prisma.InputJsonValue,
-          description: "Public support email",
+          description: "Email hỗ trợ công khai",
           groupKey: "contact",
           isPublic: true
         },
         create: {
           key: "contact_email",
           value: { value: parsed.data.email } as Prisma.InputJsonValue,
-          description: "Public support email",
+          description: "Email hỗ trợ công khai",
           groupKey: "contact",
           isPublic: true
         }
@@ -195,22 +207,53 @@ export async function updateSiteSettingsAction(
         where: { key: "zalo_hotline" },
         update: {
           value: { value: zaloNumber } as Prisma.InputJsonValue,
-          description: "Zalo hotline number",
+          description: "Số Zalo hotline",
           groupKey: "contact",
           isPublic: true
         },
         create: {
           key: "zalo_hotline",
           value: { value: zaloNumber } as Prisma.InputJsonValue,
-          description: "Zalo hotline number",
+          description: "Số Zalo hotline",
           groupKey: "contact",
+          isPublic: true
+        }
+      }),
+      prisma.siteSetting.upsert({
+        where: { key: "service_pricing_image" },
+        update: {
+          value: {
+            url: servicePricingImageUrl,
+            alt: servicePricingImageAlt
+          } as Prisma.InputJsonValue,
+          description: "Ảnh minh họa khung bảng giá trên các trang dịch vụ",
+          groupKey: "service",
+          isPublic: true
+        },
+        create: {
+          key: "service_pricing_image",
+          value: {
+            url: servicePricingImageUrl,
+            alt: servicePricingImageAlt
+          } as Prisma.InputJsonValue,
+          description: "Ảnh minh họa khung bảng giá trên các trang dịch vụ",
+          groupKey: "service",
           isPublic: true
         }
       })
     ]);
 
+    const serviceSlugs = await prisma.servicePage.findMany({
+      where: { isPublished: true },
+      select: { slug: true }
+    });
+
     revalidatePath("/", "layout");
     revalidatePath("/", "page");
+    revalidatePath("/dich-vu", "page");
+    serviceSlugs.forEach((item) => {
+      revalidatePath(`/${item.slug}`, "page");
+    });
     revalidatePath("/lien-he", "page");
     revalidatePath("/admincp/settings", "page");
 

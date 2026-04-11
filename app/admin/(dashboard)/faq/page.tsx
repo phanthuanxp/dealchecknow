@@ -40,9 +40,9 @@ export default async function AdminFaqPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý FAQ</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý hỏi đáp</h1>
         <p className="mt-2 text-sm text-slate-600">
-          CRUD đầy đủ cho câu hỏi thường gặp, bao gồm publish/unpublish để kiểm soát nội dung hiển thị trên public site.
+          Quản lý đầy đủ câu hỏi thường gặp, bao gồm bật hoặc tắt hiển thị để kiểm soát nội dung trên trang công khai.
         </p>
       </section>
 

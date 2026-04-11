@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 
 import { createBreadcrumbSchema, createPageMetadata, getSeoContext } from "@/lib/seo";
@@ -38,17 +39,39 @@ export default async function ThueXeDuLichPage() {
           Dành cho gia đình, nhóm bạn và đoàn công ty cần xe linh hoạt theo điểm tham quan. Chúng tôi hỗ trợ lên lịch
           trình và sắp xếp loại xe phù hợp theo số lượng khách.
         </p>
+        <Image
+          src="/images/car-tour.svg"
+          alt="Thuê xe du lịch Ninh Bình theo lịch trình riêng"
+          width={1200}
+          height={630}
+          className="mt-5 h-44 w-full rounded-2xl border border-teal-100 object-cover sm:h-56"
+          priority
+        />
       </section>
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Lịch trình gợi ý trong ngày</h2>
+          <Image
+            src="/images/cover-service-overview.svg"
+            alt="Lịch trình tham quan Tam Cốc Tràng An Bái Đính"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Lịch trình gợi ý trong ngày</h2>
           <p className="mt-2 text-sm text-slate-600">
             Tam Cốc - Tràng An - Bái Đính - Hoa Lư - Hang Múa với thời gian dừng hợp lý cho từng điểm.
           </p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
-          <h2 className="text-base font-semibold text-slate-900">Lịch trình theo yêu cầu</h2>
+          <Image
+            src="/images/cover-about.svg"
+            alt="Thuê xe du lịch theo yêu cầu riêng của đoàn"
+            width={420}
+            height={240}
+            className="h-20 w-full rounded-lg border border-slate-200 object-cover"
+          />
+          <h2 className="mt-3 text-base font-semibold text-slate-900">Lịch trình theo yêu cầu</h2>
           <p className="mt-2 text-sm text-slate-600">
             Tùy chỉnh điểm đón, điểm trả và điểm tham quan theo nhu cầu riêng của đoàn.
           </p>

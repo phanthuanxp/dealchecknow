@@ -74,16 +74,16 @@ export default async function AdminBlogEditPage({ params }: AdminBlogEditPagePro
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Chỉnh sửa bài blog</h1>
+            <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Chỉnh sửa bài viết</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Cập nhật nội dung, SEO metadata và trạng thái xuất bản của bài viết.
+              Cập nhật nội dung, thông tin SEO và trạng thái xuất bản của bài viết.
             </p>
           </div>
           <Link
             href="/admincp/blog"
             className="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            Quay lại danh sách blog
+            Quay lại danh sách bài viết
           </Link>
         </div>
       </section>

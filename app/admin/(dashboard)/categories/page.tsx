@@ -48,9 +48,9 @@ export default async function AdminCategoriesPage() {
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý danh mục blog</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Quản lý danh mục bài viết</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Tạo và quản trị danh mục để nhóm nội dung blog theo chủ đề, hỗ trợ SEO và điều hướng nội dung rõ ràng.
+          Tạo và quản trị danh mục để nhóm nội dung bài viết theo chủ đề, hỗ trợ SEO và điều hướng nội dung rõ ràng.
         </p>
       </section>
 
