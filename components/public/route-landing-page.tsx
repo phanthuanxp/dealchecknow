@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -30,8 +29,6 @@ type RouteLandingPageProps = {
   service: PublicServicePage;
   relatedServices: ServiceListItem[];
 };
-
-const FALLBACK_FEATURED_IMAGE = "/images/services/service-ha-noi.webp";
 
 function toKeyword(slug: string) {
   return slug.replace(/-/g, " ");
@@ -145,17 +142,17 @@ function createFallbackReviews(serviceTitle: string, pickup: string, dropoff: st
   return [
     {
       customer: "Anh Minh",
-      route: `${pickup} → ${dropoff}`,
+      route: `${pickup} ↔ ${dropoff}`,
       content: `${serviceTitle} đúng giờ, tài xế hỗ trợ hành lý nhiệt tình và lái xe an toàn.`
     },
     {
       customer: "Chị Hương",
-      route: `${pickup} → ${dropoff}`,
+      route: `${pickup} ↔ ${dropoff}`,
       content: "Gia đình đi có trẻ nhỏ vẫn rất thoải mái, xe sạch và tổng đài phản hồi nhanh."
     },
     {
       customer: "Anh Quân",
-      route: `${pickup} → ${dropoff}`,
+      route: `${pickup} ↔ ${dropoff}`,
       content: "Giá báo trước rõ ràng, lộ trình minh bạch và không có phát sinh bất ngờ."
     }
   ];
@@ -192,7 +189,7 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
   const routeBenefits = toTextList(service.routeBenefits, [
     "Lái xe thân thiện, hỗ trợ hành lý",
     "Đón trả tận nơi theo lịch đặt",
-    "Theo dõi lịch trình và xác nhận trước chuyến"
+    "Theo dõi lộ trình và xác nhận trước chuyến"
   ]);
 
   const pricingRows = getPricingRows(service.pricingTable);
@@ -295,33 +292,6 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
         </div>
       </section>
 
-      <section className="mt-6 grid items-stretch gap-4 lg:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Thông tin chi tiết tuyến {keyword}</h2>
-          <p className="mt-3 text-sm leading-7 text-slate-700">{service.shortDescription}</p>
-          <div className="mt-4 space-y-3">
-            {mainContentParagraphs.map((paragraph, index) => (
-              <p key={`${service.id}-paragraph-${index}`} className="text-sm leading-7 text-slate-700">
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </article>
-
-        <article className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-          <div className="relative h-[280px] overflow-hidden rounded-xl border border-slate-200 bg-slate-100 sm:h-[340px]">
-            <Image
-              src={service.featuredImage || FALLBACK_FEATURED_IMAGE}
-              alt={service.title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 90vw, 45vw"
-              priority={false}
-            />
-          </div>
-        </article>
-      </section>
-
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-5">
           <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
@@ -357,11 +327,11 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
           <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Bảng giá tham khảo theo loại xe</h2>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold sm:text-sm">
             <p className="text-amber-700">👉 Bảng giá chỉ mang tính chất tham khảo</p>
-            <p className="text-emerald-700">👉 Gọi ngay để nhận báo giá tốt nhất theo thời điểm</p>
+            <p className="text-emerald-700">👉 Gọi ngay để nhận được báo giá tốt nhất</p>
           </div>
 
           <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
+            <table className="w-full min-w-[460px] border-collapse text-sm">
               <thead>
                 <tr>
                   <th className="border border-slate-200 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-800">Loại xe</th>
@@ -396,6 +366,18 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
             ))}
           </ul>
         </article>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Thông tin chi tiết tuyến {keyword}</h2>
+        <p className="mt-3 text-sm leading-7 text-slate-700">{service.shortDescription}</p>
+        <div className="mt-4 space-y-3">
+          {mainContentParagraphs.map((paragraph, index) => (
+            <p key={`${service.id}-paragraph-${index}`} className="text-sm leading-7 text-slate-700">
+              {paragraph}
+            </p>
+          ))}
+        </div>
       </section>
 
       <section className="mt-6 grid gap-4 lg:grid-cols-2">
