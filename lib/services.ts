@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
 import { ROUTE_LANDINGS } from "@/lib/route-landings";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 export type ServicePricingRow = {
   vehicle: string;
@@ -291,11 +292,24 @@ function toListItem(service: PublicServicePage): ServiceListItem {
   };
 }
 
-async function getDbServices(options: { publishedOnly: boolean }) {
-  const records = await prisma.servicePage.findMany({
-    where: options.publishedOnly ? { isPublished: true } : undefined,
+async function getDbServices(options: { publishedOnly: boolean; tenantId: string | null }) {
+  let records = await prisma.servicePage.findMany({
+    where: {
+      ...whereByTenantId(options.tenantId),
+      ...(options.publishedOnly ? { isPublished: true } : {})
+    },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
   });
+
+  if (options.tenantId && records.length === 0) {
+    records = await prisma.servicePage.findMany({
+      where: {
+        tenantId: null,
+        ...(options.publishedOnly ? { isPublished: true } : {})
+      },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+    });
+  }
 
   return records.map(mapServiceRecordToPublic);
 }
@@ -308,7 +322,8 @@ export async function getPublishedServices(): Promise<PublicServicePage[]> {
   }
 
   try {
-    const rows = await getDbServices({ publishedOnly: true });
+    const tenant = await resolveTenantForCurrentRequest();
+    const rows = await getDbServices({ publishedOnly: true, tenantId: tenant?.id ?? null });
     if (rows.length === 0) {
       return fallback;
     }
@@ -326,7 +341,8 @@ export async function getAllServices(): Promise<PublicServicePage[]> {
   }
 
   try {
-    const rows = await getDbServices({ publishedOnly: false });
+    const tenant = await resolveTenantForCurrentRequest();
+    const rows = await getDbServices({ publishedOnly: false, tenantId: tenant?.id ?? null });
     if (rows.length === 0) {
       return fallback;
     }
@@ -347,12 +363,26 @@ export async function getPublishedServiceBySlug(slug: string): Promise<PublicSer
   }
 
   try {
-    const record = await prisma.servicePage.findFirst({
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let record = await prisma.servicePage.findFirst({
       where: {
+        ...whereByTenantId(tenantId),
         isPublished: true,
         OR: [{ slug: normalizedSlug }, { legacySlugs: { has: normalizedSlug } }]
       }
     });
+
+    if (!record && tenantId) {
+      record = await prisma.servicePage.findFirst({
+        where: {
+          tenantId: null,
+          isPublished: true,
+          OR: [{ slug: normalizedSlug }, { legacySlugs: { has: normalizedSlug } }]
+        }
+      });
+    }
 
     if (!record) {
       return getFallbackServices().find((service) => service.slug === normalizedSlug) ?? null;
@@ -370,9 +400,24 @@ export async function getServiceById(id: string): Promise<PublicServicePage | nu
   }
 
   try {
-    const record = await prisma.servicePage.findUnique({
-      where: { id }
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let record = await prisma.servicePage.findFirst({
+      where: {
+        id,
+        ...whereByTenantId(tenantId)
+      }
     });
+
+    if (!record && tenantId) {
+      record = await prisma.servicePage.findFirst({
+        where: {
+          id,
+          tenantId: null
+        }
+      });
+    }
 
     if (!record) {
       return null;
@@ -402,14 +447,31 @@ export async function getServiceSlugsForSitemap(): Promise<Array<{ slug: string;
   }
 
   try {
-    const rows = await prisma.servicePage.findMany({
-      where: { isPublished: true },
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let rows = await prisma.servicePage.findMany({
+      where: {
+        ...whereByTenantId(tenantId),
+        isPublished: true
+      },
       select: {
         slug: true,
         updatedAt: true
       },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
     });
+
+    if (tenantId && rows.length === 0) {
+      rows = await prisma.servicePage.findMany({
+        where: { tenantId: null, isPublished: true },
+        select: {
+          slug: true,
+          updatedAt: true
+        },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+      });
+    }
 
     if (rows.length === 0) {
       return getFallbackServices().map((service) => ({

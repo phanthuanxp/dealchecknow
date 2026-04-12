@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getHomeBlockTemplate, getHomeSectionTemplate, type HomeBlockTemplate } from "@/lib/home-blocks";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -14,6 +15,8 @@ export type BlocksActionState = {
   status: ActionStatus;
   message: string;
 };
+
+type EditorGuard = { tenantId: string | null } | { error: BlocksActionState };
 
 const sectionKeySchema = z
   .string()
@@ -161,24 +164,50 @@ function revalidateHomeContent() {
   revalidatePath("/admincp/blocks", "page");
 }
 
-async function validateAuthenticatedEditor() {
+async function validateAuthenticatedEditor(): Promise<EditorGuard> {
   const session = await auth();
   if (!session?.user?.id) {
-    return errorState("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    return { error: errorState("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.") };
   }
 
   const role = session.user.role;
   if (role !== UserRole.ADMIN && role !== UserRole.EDITOR) {
-    return errorState("Bạn không có quyền cập nhật nội dung landing page.");
+    return { error: errorState("Bạn không có quyền cập nhật nội dung landing page.") };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
-async function upsertSectionByKey(sectionKey: string, input: { title: string; description: string; isActive: boolean }) {
+async function findSectionByTenantAndKey(sectionKey: string, tenantId: string | null) {
+  let section = await prisma.siteSection.findFirst({
+    where: {
+      ...whereByTenantId(tenantId),
+      key: sectionKey
+    }
+  });
+
+  if (!section && tenantId) {
+    section = await prisma.siteSection.findFirst({
+      where: {
+        tenantId: null,
+        key: sectionKey
+      }
+    });
+  }
+
+  return section;
+}
+
+async function upsertSectionByKey(
+  sectionKey: string,
+  input: { title: string; description: string; isActive: boolean },
+  tenantId: string | null
+) {
   const template = getHomeSectionTemplate(sectionKey);
 
   const createSection = {
+    tenantId,
     key: sectionKey,
     name: template?.name ?? `Section ${sectionKey}`,
     type: template?.type ?? SectionType.HOME,
@@ -188,26 +217,31 @@ async function upsertSectionByKey(sectionKey: string, input: { title: string; de
     isActive: input.isActive
   };
 
-  return prisma.siteSection.upsert({
-    where: { key: sectionKey },
-    update: {
-      title: input.title,
-      description: input.description || null,
-      isActive: input.isActive,
-      name: template?.name ?? createSection.name,
-      type: template?.type ?? createSection.type
-    },
-    create: createSection
-  });
+  const existing = await findSectionByTenantAndKey(sectionKey, tenantId);
+  if (existing) {
+    return prisma.siteSection.update({
+      where: { id: existing.id },
+      data: {
+        tenantId,
+        title: input.title,
+        description: input.description || null,
+        isActive: input.isActive,
+        name: template?.name ?? createSection.name,
+        type: template?.type ?? createSection.type
+      }
+    });
+  }
+
+  return prisma.siteSection.create({ data: createSection });
 }
 
 export async function saveLayoutOrderAction(
   _prevState: BlocksActionState,
   formData: FormData
 ): Promise<BlocksActionState> {
-  const authError = await validateAuthenticatedEditor();
-  if (authError) {
-    return authError;
+  const guard = await validateAuthenticatedEditor();
+  if ("error" in guard) {
+    return guard.error;
   }
 
   if (!process.env.DATABASE_URL) {
@@ -233,12 +267,23 @@ export async function saveLayoutOrderAction(
 
   try {
     const sectionKeys = parsed.data.map((row) => row.sectionKey);
-    const sections = await prisma.siteSection.findMany({
+    let sections = await prisma.siteSection.findMany({
       where: {
+        ...whereByTenantId(guard.tenantId),
         key: { in: sectionKeys }
       },
       select: { id: true, key: true }
     });
+
+    if (sections.length === 0 && guard.tenantId) {
+      sections = await prisma.siteSection.findMany({
+        where: {
+          tenantId: null,
+          key: { in: sectionKeys }
+        },
+        select: { id: true, key: true }
+      });
+    }
 
     const sectionIdByKey = new Map(sections.map((section) => [section.key, section.id]));
 
@@ -284,9 +329,9 @@ export async function updateSectionAction(
   _prevState: BlocksActionState,
   formData: FormData
 ): Promise<BlocksActionState> {
-  const authError = await validateAuthenticatedEditor();
-  if (authError) {
-    return authError;
+  const guard = await validateAuthenticatedEditor();
+  if ("error" in guard) {
+    return guard.error;
   }
 
   if (!process.env.DATABASE_URL) {
@@ -305,11 +350,15 @@ export async function updateSectionAction(
   }
 
   try {
-    await upsertSectionByKey(parsed.data.sectionKey, {
-      title: parsed.data.title,
-      description: parsed.data.description,
-      isActive: parsed.data.isActive
-    });
+    await upsertSectionByKey(
+      parsed.data.sectionKey,
+      {
+        title: parsed.data.title,
+        description: parsed.data.description,
+        isActive: parsed.data.isActive
+      },
+      guard.tenantId
+    );
 
     revalidateHomeContent();
     return successState("Đã cập nhật mục nội dung thành công.");
@@ -322,9 +371,9 @@ export async function updateBlockAction(
   _prevState: BlocksActionState,
   formData: FormData
 ): Promise<BlocksActionState> {
-  const authError = await validateAuthenticatedEditor();
-  if (authError) {
-    return authError;
+  const guard = await validateAuthenticatedEditor();
+  if ("error" in guard) {
+    return guard.error;
   }
 
   if (!process.env.DATABASE_URL) {
@@ -345,16 +394,18 @@ export async function updateBlockAction(
   }
 
   try {
-    let section = await prisma.siteSection.findUnique({
-      where: { key: parsed.data.sectionKey }
-    });
+    let section = await findSectionByTenantAndKey(parsed.data.sectionKey, guard.tenantId);
 
     if (!section) {
-      section = await upsertSectionByKey(parsed.data.sectionKey, {
-        title: String(formData.get("sectionTitleFallback") ?? parsed.data.sectionKey),
-        description: String(formData.get("sectionDescriptionFallback") ?? ""),
-        isActive: true
-      });
+      section = await upsertSectionByKey(
+        parsed.data.sectionKey,
+        {
+          title: String(formData.get("sectionTitleFallback") ?? parsed.data.sectionKey),
+          description: String(formData.get("sectionDescriptionFallback") ?? ""),
+          isActive: true
+        },
+        guard.tenantId
+      );
     }
 
     const existingBlock = await prisma.pageBlock.findUnique({
@@ -395,6 +446,7 @@ export async function updateBlockAction(
         }
       },
       update: {
+        tenantId: guard.tenantId,
         title: parsed.data.title || null,
         blockType: blockTemplate?.blockType ?? parsed.data.blockType,
         content: nextContent as Prisma.InputJsonValue,
@@ -402,6 +454,7 @@ export async function updateBlockAction(
         sortOrder: parsed.data.sortOrder
       },
       create: {
+        tenantId: guard.tenantId,
         sectionId: section.id,
         blockKey: parsed.data.blockKey,
         title: parsed.data.title || null,

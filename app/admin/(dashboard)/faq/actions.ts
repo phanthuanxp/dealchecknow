@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -64,7 +65,8 @@ async function ensureEditorRole() {
     return { error: "Bạn không có quyền thao tác FAQ." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 function success(message: string): FaqActionState {
@@ -103,8 +105,8 @@ export async function createFaqAction(
   formData: FormData
 ): Promise<FaqActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác FAQ.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -129,6 +131,7 @@ export async function createFaqAction(
 
     await prisma.faq.create({
       data: {
+        tenantId: authError.tenantId,
         slug,
         question: parsed.data.question,
         answer: parsed.data.answer,
@@ -149,8 +152,8 @@ export async function updateFaqAction(
   formData: FormData
 ): Promise<FaqActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác FAQ.");
   }
 
   const rawSlug = String(formData.get("slug") ?? "");
@@ -168,11 +171,28 @@ export async function updateFaqAction(
   }
 
   try {
+    const existing = await prisma.faq.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true }
+    });
+
+    if (!existing) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y FAQ cáº§n cáº­p nháº­t.");
+    }
+
     const slug = await resolveUniqueSlug(parsed.data.slug, parsed.data.id);
 
     await prisma.faq.update({
-      where: { id: parsed.data.id },
+      where: { id: existing.id },
       data: {
+        tenantId: authError.tenantId,
         slug,
         question: parsed.data.question,
         answer: parsed.data.answer,
@@ -193,8 +213,8 @@ export async function deleteFaqAction(
   formData: FormData
 ): Promise<FaqActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác FAQ.");
   }
 
   const parsed = deleteFaqSchema.safeParse({
@@ -206,8 +226,24 @@ export async function deleteFaqAction(
   }
 
   try {
+    const existing = await prisma.faq.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true }
+    });
+
+    if (!existing) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y FAQ cáº§n xÃ³a.");
+    }
+
     await prisma.faq.delete({
-      where: { id: parsed.data.id }
+      where: { id: existing.id }
     });
     revalidateFaqPaths();
     return success("Đã xóa FAQ.");

@@ -50,7 +50,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             id: user.id,
             email: user.email,
             name: user.fullName,
-            role: user.role
+            role: user.role,
+            tenantId: user.tenantId
           };
         } catch {
           return null;
@@ -64,6 +65,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.sub = user.id;
         token.role = (user as { role?: UserRole }).role ?? UserRole.EDITOR;
+        token.tenantId = (user as { tenantId?: string | null }).tenantId ?? null;
       }
       return token;
     },
@@ -71,6 +73,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.sub ?? "";
         session.user.role = (token.role as UserRole | undefined) ?? UserRole.EDITOR;
+        session.user.tenantId =
+          typeof token.tenantId === "string" && token.tenantId.trim().length > 0
+            ? token.tenantId
+            : null;
       }
       return session;
     }

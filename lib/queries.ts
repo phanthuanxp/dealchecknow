@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { getPublicPricingItems } from "@/lib/public-content";
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 type HomeSectionKey =
   | "home-hero"
@@ -366,6 +367,9 @@ export async function getHomePageData(): Promise<HomePageData> {
   }
 
   try {
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
     const targetKeys: HomeSectionKey[] = [
       "home-hero",
       "home-quote",
@@ -377,29 +381,73 @@ export async function getHomePageData(): Promise<HomePageData> {
       "home-final-cta"
     ];
 
-    const [sections, pricingItems, faqs, testimonials] = await Promise.all([
+    const [sectionsResult, pricingItems, faqsResult, testimonialsResult] = await Promise.all([
       prisma.siteSection.findMany({
         where: {
+          ...whereByTenantId(tenantId),
           key: { in: targetKeys },
           isActive: true
         },
         include: {
           blocks: {
-            where: { isActive: true },
+            where: {
+              ...whereByTenantId(tenantId),
+              isActive: true
+            },
             orderBy: { sortOrder: "asc" }
           }
         }
       }),
       getPublicPricingItems({ onlyHome: true }),
       prisma.faq.findMany({
-        where: { isActive: true },
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
       }),
       prisma.testimonial.findMany({
-        where: { isActive: true },
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        },
         orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
       })
     ]);
+
+    let sections = sectionsResult;
+    let faqs = faqsResult;
+    let testimonials = testimonialsResult;
+
+    if (tenantId && sections.length === 0) {
+      sections = await prisma.siteSection.findMany({
+        where: {
+          tenantId: null,
+          key: { in: targetKeys },
+          isActive: true
+        },
+        include: {
+          blocks: {
+            where: { tenantId: null, isActive: true },
+            orderBy: { sortOrder: "asc" }
+          }
+        }
+      });
+    }
+
+    if (tenantId && faqs.length === 0) {
+      faqs = await prisma.faq.findMany({
+        where: { tenantId: null, isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
+
+    if (tenantId && testimonials.length === 0) {
+      testimonials = await prisma.testimonial.findMany({
+        where: { tenantId: null, isActive: true },
+        orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     const sectionMap = new Map<string, HomeSectionWithBlocks>();
     for (const section of sections) {

@@ -7,12 +7,40 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { createServiceSlug } from "@/lib/services";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
 export type ServiceActionState = {
   status: ActionStatus;
   message: string;
+};
+
+type EditorGuard = { tenantId: string | null } | { error: string };
+
+type ServiceMutationData = {
+  title: string;
+  slug: string;
+  shortDescription: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  h1: string | null;
+  heroTitle: string | null;
+  heroDescription: string | null;
+  featuredImage: string | null;
+  mainContent: string | null;
+  contentBlocks: Prisma.ServicePageUncheckedCreateInput["contentBlocks"];
+  pricingTable: Array<{ vehicle: string; price: string; note: string }>;
+  faqItems: Array<{ question: string; answer: string }>;
+  routeBenefits: string[];
+  pickupLocations: string[];
+  dropoffLocations: string[];
+  trustHighlights: string[];
+  relatedServiceSlugs: string[];
+  legacySlugs: string[];
+  sortOrder: number;
+  isPublished: boolean;
+  canonicalUrl: string | null;
 };
 
 const baseServiceSchema = z.object({
@@ -137,7 +165,7 @@ function normalizeCanonical(value: string, slug: string) {
   }
 }
 
-async function ensureEditorRole() {
+async function ensureEditorRole(): Promise<EditorGuard> {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại." };
@@ -147,7 +175,8 @@ async function ensureEditorRole() {
     return { error: "Bạn không có quyền thao tác dịch vụ." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 async function resolveUniqueSlug(baseSlug: string, currentId?: string) {
@@ -184,11 +213,7 @@ function revalidateServicePaths(slug: string, legacySlugs: string[], previousSlu
 function buildServiceData(
   parsed: z.infer<typeof baseServiceSchema>,
   slug: string
-): Omit<Prisma.ServicePageCreateInput, "slug" | "title" | "shortDescription"> & {
-  title: string;
-  slug: string;
-  shortDescription: string;
-} {
+): ServiceMutationData {
   const pricingTable = parsePricingTable(parsed.pricingTableText);
   const faqItems = parseFaqItems(parsed.faqItemsText);
   const featuredImage = normalizeMediaUrl(parsed.featuredImage);
@@ -245,9 +270,9 @@ export async function createServiceAction(
   _prev: ServiceActionState,
   formData: FormData
 ): Promise<ServiceActionState> {
-  const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  const guard = await ensureEditorRole();
+  if ("error" in guard) {
+    return failure(guard.error);
   }
 
   if (!process.env.DATABASE_URL) {
@@ -292,7 +317,10 @@ export async function createServiceAction(
     const serviceData = buildServiceData(parsed.data, slug);
 
     const created = await prisma.servicePage.create({
-      data: serviceData
+      data: {
+        ...serviceData,
+        tenantId: guard.tenantId
+      }
     });
 
     revalidateServicePaths(created.slug, created.legacySlugs);
@@ -310,9 +338,9 @@ export async function updateServiceAction(
   _prev: ServiceActionState,
   formData: FormData
 ): Promise<ServiceActionState> {
-  const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  const guard = await ensureEditorRole();
+  if ("error" in guard) {
+    return failure(guard.error);
   }
 
   if (!process.env.DATABASE_URL) {
@@ -349,8 +377,15 @@ export async function updateServiceAction(
   }
 
   try {
-    const existing = await prisma.servicePage.findUnique({
-      where: { id: parsed.data.id }
+    const existing = await prisma.servicePage.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(guard.tenantId
+          ? {
+              OR: [{ tenantId: guard.tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
     });
 
     if (!existing) {
@@ -367,7 +402,10 @@ export async function updateServiceAction(
 
     const updated = await prisma.servicePage.update({
       where: { id: existing.id },
-      data: serviceData
+      data: {
+        ...serviceData,
+        tenantId: guard.tenantId ?? existing.tenantId ?? null
+      }
     });
 
     revalidateServicePaths(updated.slug, updated.legacySlugs, existing.slug);
@@ -385,9 +423,9 @@ export async function deleteServiceAction(
   _prev: ServiceActionState,
   formData: FormData
 ): Promise<ServiceActionState> {
-  const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  const guard = await ensureEditorRole();
+  if ("error" in guard) {
+    return failure(guard.error);
   }
 
   if (!process.env.DATABASE_URL) {
@@ -403,8 +441,15 @@ export async function deleteServiceAction(
   }
 
   try {
-    const existing = await prisma.servicePage.findUnique({
-      where: { id: parsed.data.id }
+    const existing = await prisma.servicePage.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(guard.tenantId
+          ? {
+              OR: [{ tenantId: guard.tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
     });
 
     if (!existing) {

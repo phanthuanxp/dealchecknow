@@ -1,6 +1,7 @@
 import { PublishStatus } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 export type PublicBlogPost = {
   id: string;
@@ -265,8 +266,12 @@ export async function getPublishedBlogPosts(): Promise<PublicBlogPost[]> {
 
   try {
     const now = new Date();
-    const posts = await prisma.blogPost.findMany({
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let posts = await prisma.blogPost.findMany({
       where: {
+        ...whereByTenantId(tenantId),
         status: PublishStatus.PUBLISHED,
         OR: [{ publishedAt: null }, { publishedAt: { lte: now } }]
       },
@@ -281,6 +286,26 @@ export async function getPublishedBlogPosts(): Promise<PublicBlogPost[]> {
       },
       orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && posts.length === 0) {
+      posts = await prisma.blogPost.findMany({
+        where: {
+          tenantId: null,
+          status: PublishStatus.PUBLISHED,
+          OR: [{ publishedAt: null }, { publishedAt: { lte: now } }]
+        },
+        include: {
+          category: {
+            select: {
+              id: true,
+              name: true,
+              slug: true
+            }
+          }
+        },
+        orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }]
+      });
+    }
 
     if (posts.length === 0) {
       return sortPosts([...fallbackPosts]);
@@ -320,8 +345,14 @@ export async function getPublicBlogCategories(): Promise<PublicBlogCategory[]> {
   }
 
   try {
-    const categories = await prisma.blogCategory.findMany({
-      where: { isActive: true },
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let categories = await prisma.blogCategory.findMany({
+      where: {
+        ...whereByTenantId(tenantId),
+        isActive: true
+      },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       select: {
         id: true,
@@ -329,6 +360,18 @@ export async function getPublicBlogCategories(): Promise<PublicBlogCategory[]> {
         name: true
       }
     });
+
+    if (tenantId && categories.length === 0) {
+      categories = await prisma.blogCategory.findMany({
+        where: { tenantId: null, isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          slug: true,
+          name: true
+        }
+      });
+    }
 
     if (categories.length === 0) {
       return fallbackCategories;

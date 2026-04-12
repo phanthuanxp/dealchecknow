@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 export type PublicPricingItem = {
   id: string;
@@ -216,11 +217,18 @@ export async function getPublicPricingSectionMeta(): Promise<PublicPricingSectio
   }
 
   try {
-    const section = await prisma.siteSection.findUnique({
-      where: { key: "home-pricing" },
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let section = await prisma.siteSection.findFirst({
+      where: {
+        ...whereByTenantId(tenantId),
+        key: "home-pricing"
+      },
       include: {
         blocks: {
           where: {
+            ...whereByTenantId(tenantId),
             isActive: true,
             blockKey: "pricing-note"
           },
@@ -228,6 +236,25 @@ export async function getPublicPricingSectionMeta(): Promise<PublicPricingSectio
         }
       }
     });
+
+    if (!section && tenantId) {
+      section = await prisma.siteSection.findFirst({
+        where: {
+          tenantId: null,
+          key: "home-pricing"
+        },
+        include: {
+          blocks: {
+            where: {
+              tenantId: null,
+              isActive: true,
+              blockKey: "pricing-note"
+            },
+            orderBy: { sortOrder: "asc" }
+          }
+        }
+      });
+    }
 
     if (!section) {
       return fallbackPricingSectionMeta;
@@ -252,20 +279,24 @@ export async function getPublicPricingItems(
   }
 
   try {
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
     const baseOrder = [{ sortOrder: "asc" as const }, { createdAt: "desc" as const }];
     let items = await prisma.pricingItem.findMany({
       where: {
+        ...whereByTenantId(tenantId),
         isActive: true,
         ...(options.onlyHome ? { showOnHome: true } : {})
       },
       orderBy: baseOrder
     });
 
-    if (options.onlyHome && items.length === 0) {
+    if (tenantId && items.length === 0) {
       items = await prisma.pricingItem.findMany({
         where: {
+          tenantId: null,
           isActive: true,
-          isPopular: true
+          ...(options.onlyHome ? { showOnHome: true } : {})
         },
         orderBy: baseOrder
       });
@@ -273,9 +304,41 @@ export async function getPublicPricingItems(
 
     if (options.onlyHome && items.length === 0) {
       items = await prisma.pricingItem.findMany({
-        where: { isActive: true },
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true,
+          isPopular: true
+        },
         orderBy: baseOrder
       });
+
+      if (tenantId && items.length === 0) {
+        items = await prisma.pricingItem.findMany({
+          where: {
+            tenantId: null,
+            isActive: true,
+            isPopular: true
+          },
+          orderBy: baseOrder
+        });
+      }
+    }
+
+    if (options.onlyHome && items.length === 0) {
+      items = await prisma.pricingItem.findMany({
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        },
+        orderBy: baseOrder
+      });
+
+      if (tenantId && items.length === 0) {
+        items = await prisma.pricingItem.findMany({
+          where: { tenantId: null, isActive: true },
+          orderBy: baseOrder
+        });
+      }
     }
 
     if (items.length === 0) {
@@ -306,10 +369,26 @@ export async function getPublicFaqItems(): Promise<PublicFaqItem[]> {
   }
 
   try {
-    const items = await prisma.faq.findMany({
-      where: { isActive: true },
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
+    let items = await prisma.faq.findMany({
+      where: {
+        ...whereByTenantId(tenantId),
+        isActive: true
+      },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && items.length === 0) {
+      items = await prisma.faq.findMany({
+        where: {
+          tenantId: null,
+          isActive: true
+        },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     if (items.length === 0) {
       return fallbackFaqItems;

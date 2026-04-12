@@ -162,7 +162,7 @@ export function AdminSettingsForm({ defaultValues, databaseReady }: AdminSetting
             <h3 className="text-sm font-semibold text-slate-900">Anh minh hoa bang gia trang dich vu</h3>
             <p className="mt-1 text-xs text-slate-600">
               Upload anh tai <span className="font-semibold">/admincp/media</span>, sau do dan URL vao day de hien thi o cot
-              anh ben phai block "Bang gia tham khao theo loai xe" tren tat ca trang dich vu.
+              anh ben phai block Bang gia tham khao theo loai xe tren tat ca trang dich vu.
             </p>
 
             <div className="mt-3 grid gap-3 sm:grid-cols-2">

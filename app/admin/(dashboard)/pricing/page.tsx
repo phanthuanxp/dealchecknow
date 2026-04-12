@@ -1,5 +1,7 @@
 import { AdminPricingManager, type AdminPricingRoute } from "@/components/admin/pricing-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 type SeatKey = "seat4" | "seat7" | "seat16";
 
@@ -38,9 +40,20 @@ async function getPricingData() {
   }
 
   try {
-    const items = await prisma.pricingItem.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
+    let items = await prisma.pricingItem.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && items.length === 0) {
+      items = await prisma.pricingItem.findMany({
+        where: { tenantId: null },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     const routeMap = new Map<string, AdminPricingRoute>();
 

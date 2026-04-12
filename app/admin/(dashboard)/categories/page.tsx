@@ -1,5 +1,7 @@
 import { AdminCategoriesManager } from "@/components/admin/categories-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 async function getCategoryData() {
   if (!process.env.DATABASE_URL) {
@@ -10,7 +12,10 @@ async function getCategoryData() {
   }
 
   try {
-    const categories = await prisma.blogCategory.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+    let categories = await prisma.blogCategory.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
       include: {
         _count: {
@@ -20,6 +25,20 @@ async function getCategoryData() {
         }
       }
     });
+
+    if (tenantId && categories.length === 0) {
+      categories = await prisma.blogCategory.findMany({
+        where: { tenantId: null },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+        include: {
+          _count: {
+            select: {
+              posts: true
+            }
+          }
+        }
+      });
+    }
 
     return {
       databaseReady: true,

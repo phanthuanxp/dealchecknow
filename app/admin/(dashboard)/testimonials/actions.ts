@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -60,7 +61,8 @@ async function ensureEditorRole() {
     return { error: "Bạn không có quyền thao tác đánh giá khách hàng." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 function success(message: string): TestimonialActionState {
@@ -97,8 +99,8 @@ export async function createTestimonialAction(
   formData: FormData
 ): Promise<TestimonialActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác đánh giá.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -126,6 +128,7 @@ export async function createTestimonialAction(
 
     await prisma.testimonial.create({
       data: {
+        tenantId: authError.tenantId,
         code,
         customerName: parsed.data.customerName,
         content: parsed.data.content,
@@ -150,8 +153,8 @@ export async function updateTestimonialAction(
   formData: FormData
 ): Promise<TestimonialActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác đánh giá.");
   }
 
   const parsed = updateTestimonialSchema.safeParse({
@@ -172,11 +175,31 @@ export async function updateTestimonialAction(
   }
 
   try {
+    const existing = await prisma.testimonial.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: {
+        id: true,
+        tenantId: true
+      }
+    });
+
+    if (!existing) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y testimonial cáº§n cáº­p nháº­t.");
+    }
+
     const code = await resolveUniqueCode(parsed.data.code, parsed.data.id);
 
     await prisma.testimonial.update({
-      where: { id: parsed.data.id },
+      where: { id: existing.id },
       data: {
+        tenantId: authError.tenantId ?? existing.tenantId,
         code,
         customerName: parsed.data.customerName,
         content: parsed.data.content,
@@ -201,8 +224,8 @@ export async function deleteTestimonialAction(
   formData: FormData
 ): Promise<TestimonialActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác đánh giá.");
   }
 
   const parsed = deleteTestimonialSchema.safeParse({
@@ -214,8 +237,24 @@ export async function deleteTestimonialAction(
   }
 
   try {
+    const existing = await prisma.testimonial.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true }
+    });
+
+    if (!existing) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y testimonial cáº§n xÃ³a.");
+    }
+
     await prisma.testimonial.delete({
-      where: { id: parsed.data.id }
+      where: { id: existing.id }
     });
     revalidateTestimonialPaths();
     return success("Đã xóa testimonial.");

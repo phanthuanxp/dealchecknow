@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 export type FooterContentData = {
   companyName: string;
@@ -50,8 +51,10 @@ export async function getFooterContentData(): Promise<FooterContentData> {
   }
 
   try {
-    const section = await prisma.siteSection.findFirst({
+    const tenant = await resolveTenantForCurrentRequest();
+    let section = await prisma.siteSection.findFirst({
       where: {
+        ...whereByTenantId(tenant?.id ?? null),
         key: "home-footer",
         isActive: true
       },
@@ -62,6 +65,22 @@ export async function getFooterContentData(): Promise<FooterContentData> {
         }
       }
     });
+
+    if (!section && tenant?.id) {
+      section = await prisma.siteSection.findFirst({
+        where: {
+          tenantId: null,
+          key: "home-footer",
+          isActive: true
+        },
+        include: {
+          blocks: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+          }
+        }
+      });
+    }
 
     if (!section) {
       return fallbackFooterContent;

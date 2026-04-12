@@ -1,5 +1,7 @@
 import { AdminFaqManager } from "@/components/admin/faq-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 async function getFaqData() {
   if (!process.env.DATABASE_URL) {
@@ -10,9 +12,19 @@ async function getFaqData() {
   }
 
   try {
-    const faqs = await prisma.faq.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+    let faqs = await prisma.faq.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && faqs.length === 0) {
+      faqs = await prisma.faq.findMany({
+        where: { tenantId: null },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     return {
       databaseReady: true,

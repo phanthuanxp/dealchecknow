@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -69,7 +70,8 @@ async function ensureAdminRole() {
     return { error: "Bạn không có quyền cập nhật cài đặt." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 function success(message: string): SettingsActionState {
@@ -85,8 +87,8 @@ export async function updateSiteSettingsAction(
   formData: FormData
 ): Promise<SettingsActionState> {
   const authError = await ensureAdminRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền cập nhật cài đặt.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -120,12 +122,14 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "site_name" },
         update: {
+          tenantId: authError.tenantId,
           value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
           description: "Tên website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "site_name",
           value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
           description: "Tên website công khai",
@@ -136,12 +140,14 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "site_domain" },
         update: {
+          tenantId: authError.tenantId,
           value: { value: siteDomain } as Prisma.InputJsonValue,
           description: "Tên miền website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "site_domain",
           value: { value: siteDomain } as Prisma.InputJsonValue,
           description: "Tên miền website công khai",
@@ -152,12 +158,14 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "site_tagline" },
         update: {
+          tenantId: authError.tenantId,
           value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
           description: "Khẩu hiệu website công khai",
           groupKey: "general",
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "site_tagline",
           value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
           description: "Khẩu hiệu website công khai",
@@ -168,6 +176,7 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "hotline" },
         update: {
+          tenantId: authError.tenantId,
           value: {
             value: hotlineValue,
             display: parsed.data.hotlineDisplay
@@ -177,6 +186,7 @@ export async function updateSiteSettingsAction(
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "hotline",
           value: {
             value: hotlineValue,
@@ -190,12 +200,14 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "contact_email" },
         update: {
+          tenantId: authError.tenantId,
           value: { value: parsed.data.email } as Prisma.InputJsonValue,
           description: "Email hỗ trợ công khai",
           groupKey: "contact",
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "contact_email",
           value: { value: parsed.data.email } as Prisma.InputJsonValue,
           description: "Email hỗ trợ công khai",
@@ -206,12 +218,14 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "zalo_hotline" },
         update: {
+          tenantId: authError.tenantId,
           value: { value: zaloNumber } as Prisma.InputJsonValue,
           description: "Số Zalo hotline",
           groupKey: "contact",
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "zalo_hotline",
           value: { value: zaloNumber } as Prisma.InputJsonValue,
           description: "Số Zalo hotline",
@@ -222,6 +236,7 @@ export async function updateSiteSettingsAction(
       prisma.siteSetting.upsert({
         where: { key: "service_pricing_image" },
         update: {
+          tenantId: authError.tenantId,
           value: {
             url: servicePricingImageUrl,
             alt: servicePricingImageAlt
@@ -231,6 +246,7 @@ export async function updateSiteSettingsAction(
           isPublic: true
         },
         create: {
+          tenantId: authError.tenantId,
           key: "service_pricing_image",
           value: {
             url: servicePricingImageUrl,
@@ -244,7 +260,10 @@ export async function updateSiteSettingsAction(
     ]);
 
     const serviceSlugs = await prisma.servicePage.findMany({
-      where: { isPublished: true },
+      where: {
+        ...whereByTenantId(authError.tenantId),
+        isPublished: true
+      },
       select: { slug: true }
     });
 

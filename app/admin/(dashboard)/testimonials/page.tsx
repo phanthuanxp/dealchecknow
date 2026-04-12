@@ -1,5 +1,7 @@
 import { AdminTestimonialsManager } from "@/components/admin/testimonials-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 async function getTestimonialsData() {
   if (!process.env.DATABASE_URL) {
@@ -10,9 +12,20 @@ async function getTestimonialsData() {
   }
 
   try {
-    const items = await prisma.testimonial.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
+    let items = await prisma.testimonial.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && items.length === 0) {
+      items = await prisma.testimonial.findMany({
+        where: { tenantId: null },
+        orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     return {
       databaseReady: true,

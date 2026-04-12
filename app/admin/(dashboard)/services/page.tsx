@@ -1,5 +1,7 @@
 import { AdminServicesManager, type AdminServiceItem } from "@/components/admin/services-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 function toPricingText(value: unknown) {
   if (!Array.isArray(value)) {
@@ -71,6 +73,9 @@ async function getServiceAdminData() {
   }
 
   try {
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
     const [tableCheck, mediaAssets] = await Promise.all([
       prisma.$queryRaw<Array<{ table_exists: boolean }>>`
         SELECT EXISTS (
@@ -81,7 +86,10 @@ async function getServiceAdminData() {
         ) AS table_exists
       `,
       prisma.mediaAsset.findMany({
-        where: { isActive: true },
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
         take: 120
       })
@@ -101,9 +109,17 @@ async function getServiceAdminData() {
       };
     }
 
-    const services = await prisma.servicePage.findMany({
+    let services = await prisma.servicePage.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && services.length === 0) {
+      services = await prisma.servicePage.findMany({
+        where: { tenantId: null },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     const mappedServices: AdminServiceItem[] = services.map((item) => ({
       id: item.id,

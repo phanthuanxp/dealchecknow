@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -46,7 +47,9 @@ function toSlug(input: string) {
     .slice(0, 140);
 }
 
-type EnsureEditorRoleResult = { ok: true } | { ok: false; error: string };
+type EnsureEditorRoleResult =
+  | { ok: true; tenantId: string | null }
+  | { ok: false; error: string };
 
 async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
   const session = await auth();
@@ -58,7 +61,8 @@ async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
     return { ok: false, error: "Bạn không có quyền thao tác danh mục." };
   }
 
-  return { ok: true };
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { ok: true, tenantId };
 }
 
 function success(message: string): CategoryActionState {
@@ -128,6 +132,7 @@ export async function createCategoryAction(
 
     await prisma.blogCategory.create({
       data: {
+        tenantId: authResult.tenantId,
         name: parsed.data.name,
         slug,
         description: parsed.data.description || null,
@@ -167,11 +172,28 @@ export async function updateCategoryAction(
   }
 
   try {
+    const existingCategory = await prisma.blogCategory.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true, tenantId: true }
+    });
+
+    if (!existingCategory) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y danh má»¥c cáº§n cáº­p nháº­t.");
+    }
+
     const slug = await resolveUniqueCategorySlug(parsed.data.slug, parsed.data.id);
 
     await prisma.blogCategory.update({
-      where: { id: parsed.data.id },
+      where: { id: existingCategory.id },
       data: {
+        tenantId: authResult.tenantId ?? existingCategory.tenantId,
         name: parsed.data.name,
         slug,
         description: parsed.data.description || null,
@@ -205,8 +227,31 @@ export async function deleteCategoryAction(
   }
 
   try {
+    const existingCategory = await prisma.blogCategory.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true }
+    });
+
+    if (!existingCategory) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y danh má»¥c cáº§n xÃ³a.");
+    }
+
     const postCount = await prisma.blogPost.count({
-      where: { categoryId: parsed.data.id }
+      where: {
+        categoryId: existingCategory.id,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
     });
 
     if (postCount > 0) {
@@ -214,7 +259,7 @@ export async function deleteCategoryAction(
     }
 
     await prisma.blogCategory.delete({
-      where: { id: parsed.data.id }
+      where: { id: existingCategory.id }
     });
 
     revalidateCategoryPaths();

@@ -8,6 +8,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { isVercelBlobUrl, parseOptionalInt, toSlug } from "@/lib/media";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -82,7 +83,8 @@ async function ensureEditorRole() {
     return { error: "Bạn không có quyền quản lý thư viện ảnh." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 async function resolveUniqueCode(baseCode: string, currentId?: string) {
@@ -112,8 +114,8 @@ export async function createMediaAction(
   formData: FormData
 ): Promise<MediaActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác thư viện ảnh.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -143,6 +145,7 @@ export async function createMediaAction(
     const code = await resolveUniqueCode(parsed.data.code);
     await prisma.mediaAsset.create({
       data: {
+        tenantId: authError.tenantId,
         code,
         title: parsed.data.title,
         url: parsed.data.url,
@@ -167,8 +170,8 @@ export async function updateMediaAction(
   formData: FormData
 ): Promise<MediaActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác thư viện ảnh.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -196,10 +199,30 @@ export async function updateMediaAction(
   }
 
   try {
+    const existingMedia = await prisma.mediaAsset.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: {
+        id: true,
+        tenantId: true
+      }
+    });
+
+    if (!existingMedia) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y áº£nh cáº§n cáº­p nháº­t.");
+    }
+
     const code = await resolveUniqueCode(parsed.data.code, parsed.data.id);
     await prisma.mediaAsset.update({
-      where: { id: parsed.data.id },
+      where: { id: existingMedia.id },
       data: {
+        tenantId: authError.tenantId ?? existingMedia.tenantId,
         code,
         title: parsed.data.title,
         url: parsed.data.url,
@@ -224,8 +247,8 @@ export async function deleteMediaAction(
   formData: FormData
 ): Promise<MediaActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác thư viện ảnh.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -241,8 +264,15 @@ export async function deleteMediaAction(
   }
 
   try {
-    const media = await prisma.mediaAsset.findUnique({
-      where: { id: parsed.data.id },
+    const media = await prisma.mediaAsset.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
       select: { id: true, url: true }
     });
 
@@ -251,7 +281,7 @@ export async function deleteMediaAction(
     }
 
     await prisma.mediaAsset.delete({
-      where: { id: parsed.data.id }
+      where: { id: media.id }
     });
 
     if (process.env.BLOB_READ_WRITE_TOKEN && isVercelBlobUrl(media.url)) {

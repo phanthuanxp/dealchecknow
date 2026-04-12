@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -46,7 +47,9 @@ function toSlug(input: string) {
     .slice(0, 180);
 }
 
-type EnsureEditorRoleResult = { ok: true; userId: string } | { ok: false; error: string };
+type EnsureEditorRoleResult =
+  | { ok: true; userId: string; tenantId: string | null }
+  | { ok: false; error: string };
 
 async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
   const session = await auth();
@@ -58,7 +61,8 @@ async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
     return { ok: false, error: "Bạn không có quyền thao tác bài blog." };
   }
 
-  return { ok: true, userId: session.user.id };
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { ok: true, userId: session.user.id, tenantId };
 }
 
 function parseVietnamDateTimeLocal(value: string): Date | null {
@@ -196,8 +200,15 @@ export async function createBlogPostAction(
   }
 
   try {
-    const category = await prisma.blogCategory.findUnique({
-      where: { id: parsed.data.categoryId },
+    const category = await prisma.blogCategory.findFirst({
+      where: {
+        id: parsed.data.categoryId,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
       select: { id: true }
     });
     if (!category) {
@@ -221,6 +232,7 @@ export async function createBlogPostAction(
         status: parsed.data.status,
         publishedAt,
         authorId: authResult.userId,
+        tenantId: authResult.tenantId,
         tags: []
       }
     });
@@ -278,12 +290,26 @@ export async function updateBlogPostAction(
 
   try {
     const [existingPost, category] = await Promise.all([
-      prisma.blogPost.findUnique({
-        where: { id: parsed.data.id },
-        select: { id: true, slug: true }
+      prisma.blogPost.findFirst({
+        where: {
+          id: parsed.data.id,
+          ...(authResult.tenantId
+            ? {
+                OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+              }
+            : {})
+        },
+        select: { id: true, slug: true, tenantId: true }
       }),
-      prisma.blogCategory.findUnique({
-        where: { id: parsed.data.categoryId },
+      prisma.blogCategory.findFirst({
+        where: {
+          id: parsed.data.categoryId,
+          ...(authResult.tenantId
+            ? {
+                OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+              }
+            : {})
+        },
         select: { id: true }
       })
     ]);
@@ -312,7 +338,8 @@ export async function updateBlogPostAction(
         seoTitle: parsed.data.seoTitle || null,
         seoDescription: parsed.data.seoDescription || null,
         status: parsed.data.status,
-        publishedAt
+        publishedAt,
+        tenantId: authResult.tenantId ?? existingPost.tenantId
       }
     });
 
@@ -341,8 +368,15 @@ export async function deleteBlogPostAction(
   }
 
   try {
-    const existingPost = await prisma.blogPost.findUnique({
-      where: { id: parsed.data.id },
+    const existingPost = await prisma.blogPost.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
       select: { slug: true }
     });
 

@@ -2,7 +2,9 @@ import { PublishStatus, type Prisma } from "@prisma/client";
 import Link from "next/link";
 
 import { AdminBlogListManager } from "@/components/admin/blog-list-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type BlogStatusFilter = "all" | "draft" | "published";
 
@@ -37,6 +39,12 @@ async function getBlogData(searchParams: Record<string, string | string[] | unde
   }
 
   const where: Prisma.BlogPostWhereInput = {};
+  const session = await auth();
+  const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
+  if (tenantId) {
+    where.tenantId = tenantId;
+  }
 
   if (status === "draft") {
     where.status = PublishStatus.DRAFT;
@@ -54,7 +62,7 @@ async function getBlogData(searchParams: Record<string, string | string[] | unde
   }
 
   try {
-    const posts = await prisma.blogPost.findMany({
+    let posts = await prisma.blogPost.findMany({
       where,
       include: {
         category: {
@@ -65,6 +73,23 @@ async function getBlogData(searchParams: Record<string, string | string[] | unde
       },
       orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && posts.length === 0) {
+      posts = await prisma.blogPost.findMany({
+        where: {
+          ...where,
+          tenantId: null
+        },
+        include: {
+          category: {
+            select: {
+              name: true
+            }
+          }
+        },
+        orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }]
+      });
+    }
 
     return {
       databaseReady: true,

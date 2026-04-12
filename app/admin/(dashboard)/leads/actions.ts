@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -19,7 +20,9 @@ const updateLeadStatusSchema = z.object({
   status: z.nativeEnum(QuoteRequestStatus)
 });
 
-type EnsureEditorRoleResult = { ok: true; userId: string } | { ok: false; error: string };
+type EnsureEditorRoleResult =
+  | { ok: true; userId: string; tenantId: string | null }
+  | { ok: false; error: string };
 
 async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
   const session = await auth();
@@ -31,7 +34,8 @@ async function ensureEditorRole(): Promise<EnsureEditorRoleResult> {
     return { ok: false, error: "Bạn không có quyền cập nhật trạng thái lead." };
   }
 
-  return { ok: true, userId: session.user.id };
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { ok: true, userId: session.user.id, tenantId };
 }
 
 function success(message: string): LeadActionState {
@@ -67,8 +71,24 @@ export async function updateLeadStatusAction(
   const isHandledStatus = parsed.data.status !== QuoteRequestStatus.NEW;
 
   try {
+    const existingLead = await prisma.quoteRequest.findFirst({
+      where: {
+        id: parsed.data.id,
+        ...(authResult.tenantId
+          ? {
+              OR: [{ tenantId: authResult.tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
+      select: { id: true }
+    });
+
+    if (!existingLead) {
+      return failure("KhÃ´ng tÃ¬m tháº¥y lead cáº§n cáº­p nháº­t.");
+    }
+
     await prisma.quoteRequest.update({
-      where: { id: parsed.data.id },
+      where: { id: existingLead.id },
       data: {
         status: parsed.data.status,
         handledAt: isHandledStatus ? new Date() : null,

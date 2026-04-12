@@ -2,7 +2,9 @@ import Link from "next/link";
 import { PublishStatus } from "@prisma/client";
 
 import { AdminBlogEditorForm } from "@/components/admin/blog-editor-form";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 async function getBlogNewData() {
   if (!process.env.DATABASE_URL) {
@@ -13,7 +15,10 @@ async function getBlogNewData() {
   }
 
   try {
-    const categories = await prisma.blogCategory.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+    let categories = await prisma.blogCategory.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
       select: {
         id: true,
@@ -21,6 +26,18 @@ async function getBlogNewData() {
         isActive: true
       }
     });
+
+    if (tenantId && categories.length === 0) {
+      categories = await prisma.blogCategory.findMany({
+        where: { tenantId: null },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          isActive: true
+        }
+      });
+    }
 
     return {
       databaseReady: true,

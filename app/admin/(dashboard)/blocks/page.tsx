@@ -11,6 +11,7 @@ import {
   type HomeSectionEditorItem
 } from "@/lib/home-blocks";
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 type DbSectionWithBlocks = {
   key: string;
@@ -188,9 +189,13 @@ async function getEditorData(): Promise<{
   }
 
   try {
+    const tenant = await resolveTenantForCurrentRequest();
+    const tenantId = tenant?.id ?? null;
+
     const [dbSections, mediaAssets] = await Promise.all([
       prisma.siteSection.findMany({
         where: {
+          ...whereByTenantId(tenantId),
           key: {
             startsWith: "home-"
           }
@@ -203,7 +208,10 @@ async function getEditorData(): Promise<{
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
       }),
       prisma.mediaAsset.findMany({
-        where: { isActive: true },
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        },
         orderBy: [{ groupKey: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
         select: {
           id: true,
@@ -215,8 +223,41 @@ async function getEditorData(): Promise<{
       })
     ]);
 
+    const sectionRows =
+      dbSections.length > 0 || !tenantId
+        ? dbSections
+        : await prisma.siteSection.findMany({
+            where: {
+              tenantId: null,
+              key: {
+                startsWith: "home-"
+              }
+            },
+            include: {
+              blocks: {
+                orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+              }
+            },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }]
+          });
+
+    const assetRows =
+      mediaAssets.length > 0 || !tenantId
+        ? mediaAssets
+        : await prisma.mediaAsset.findMany({
+            where: { tenantId: null, isActive: true },
+            orderBy: [{ groupKey: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }],
+            select: {
+              id: true,
+              title: true,
+              url: true,
+              altText: true,
+              groupKey: true
+            }
+          });
+
     const dbSectionMap = new Map<string, DbSectionWithBlocks>();
-    for (const section of dbSections) {
+    for (const section of sectionRows) {
       dbSectionMap.set(section.key, section);
     }
 
@@ -242,7 +283,7 @@ async function getEditorData(): Promise<{
       };
     });
 
-    const customSections: HomeSectionEditorItem[] = dbSections
+    const customSections: HomeSectionEditorItem[] = sectionRows
       .filter((section) => !HOME_CONTENT_SECTION_KEY_SET.has(section.key))
       .map((section) => ({
         key: section.key,
@@ -257,7 +298,7 @@ async function getEditorData(): Promise<{
 
     return {
       sections: [...templateSections, ...customSections].sort((a, b) => a.sortOrder - b.sortOrder),
-      mediaAssets,
+      mediaAssets: assetRows,
       databaseReady: true
     };
   } catch {

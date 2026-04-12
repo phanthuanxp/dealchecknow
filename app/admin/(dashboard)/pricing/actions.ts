@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -70,7 +71,8 @@ async function ensureEditorRole() {
     return { error: "Bạn không có quyền thao tác bảng giá." };
   }
 
-  return null;
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
+  return { tenantId };
 }
 
 function success(message: string): PricingActionState {
@@ -141,8 +143,8 @@ export async function createPricingRouteAction(
   formData: FormData
 ): Promise<PricingActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác bảng giá.");
   }
 
   if (!process.env.DATABASE_URL) {
@@ -189,6 +191,7 @@ export async function createPricingRouteAction(
       const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`);
       await prisma.pricingItem.create({
         data: {
+          tenantId: authError.tenantId,
           code,
           routeName: parsed.data.routeName,
           fromLocation: parsed.data.fromLocation,
@@ -218,8 +221,8 @@ export async function updatePricingRouteAction(
   formData: FormData
 ): Promise<PricingActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác bảng giá.");
   }
 
   const parsed = updateRoutePricingSchema.safeParse({
@@ -280,9 +283,31 @@ export async function updatePricingRouteAction(
       };
 
       if (tier.id) {
+        const existingTier = await prisma.pricingItem.findFirst({
+          where: {
+            id: tier.id,
+            ...(authError.tenantId
+              ? {
+                  OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+                }
+              : {})
+          },
+          select: {
+            id: true,
+            tenantId: true
+          }
+        });
+
+        if (!existingTier) {
+          return failure("KhÃ´ng tÃ¬m tháº¥y dá»¯ liá»‡u tuyáº¿n giÃ¡ cáº§n cáº­p nháº­t.");
+        }
+
         await prisma.pricingItem.update({
-          where: { id: tier.id },
-          data: commonData
+          where: { id: existingTier.id },
+          data: {
+            ...commonData,
+            tenantId: authError.tenantId ?? existingTier.tenantId
+          }
         });
         continue;
       }
@@ -291,6 +316,7 @@ export async function updatePricingRouteAction(
       await prisma.pricingItem.create({
         data: {
           code,
+          tenantId: authError.tenantId,
           ...commonData
         }
       });
@@ -308,8 +334,8 @@ export async function deletePricingRouteAction(
   formData: FormData
 ): Promise<PricingActionState> {
   const authError = await ensureEditorRole();
-  if (authError) {
-    return failure(authError.error);
+  if ("error" in authError) {
+    return failure(authError.error ?? "Không đủ quyền thao tác bảng giá.");
   }
 
   const parsed = deleteRoutePricingSchema.safeParse({
@@ -331,7 +357,14 @@ export async function deletePricingRouteAction(
 
   try {
     await prisma.pricingItem.deleteMany({
-      where: { id: { in: ids } }
+      where: {
+        id: { in: ids },
+        ...(authError.tenantId
+          ? {
+              OR: [{ tenantId: authError.tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
     });
     revalidatePricingPaths();
     return success("Đã xóa tuyến giá.");

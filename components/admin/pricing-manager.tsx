@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useEffectEvent, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
@@ -151,10 +151,13 @@ function PricingRouteCard({ route, disabled }: { route: AdminPricingRoute; disab
   const [expanded, setExpanded] = useState(false);
   const [updateState, updateAction] = useActionState(updatePricingRouteAction, INITIAL_PRICING_ACTION_STATE);
   const [deleteState, deleteAction] = useActionState(deletePricingRouteAction, INITIAL_PRICING_ACTION_STATE);
+  const collapseCard = useEffectEvent(() => {
+    setExpanded(false);
+  });
 
   useEffect(() => {
     if (updateState.status === "success") {
-      setExpanded(false);
+      collapseCard();
     }
   }, [updateState.status]);
 
@@ -353,10 +356,13 @@ function PricingRouteCard({ route, disabled }: { route: AdminPricingRoute; disab
 function CreateRouteSection({ databaseReady }: { databaseReady: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [createState, createAction] = useActionState(createPricingRouteAction, INITIAL_PRICING_ACTION_STATE);
+  const collapseForm = useEffectEvent(() => {
+    setExpanded(false);
+  });
 
   useEffect(() => {
     if (createState.status === "success") {
-      setExpanded(false);
+      collapseForm();
     }
   }, [createState.status]);
 

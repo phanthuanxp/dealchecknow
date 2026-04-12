@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { getFileExtension, toSlug } from "@/lib/media";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser } from "@/lib/tenant";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,8 @@ export async function POST(request: Request) {
       { status: 403 }
     );
   }
+
+  const tenantId = await resolveTenantIdForSessionUser(session.user);
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json(
@@ -173,6 +176,7 @@ export async function POST(request: Request) {
 
     const created = await prisma.mediaAsset.create({
       data: {
+        tenantId,
         code,
         title: parsed.data.title,
         url: blob.url,

@@ -1,5 +1,7 @@
 import { AdminMediaManager } from "@/components/admin/media-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 async function getMediaData() {
   if (!process.env.DATABASE_URL) {
@@ -10,9 +12,19 @@ async function getMediaData() {
   }
 
   try {
-    const mediaAssets = await prisma.mediaAsset.findMany({
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+    let mediaAssets = await prisma.mediaAsset.findMany({
+      where: whereByTenantId(tenantId),
       orderBy: [{ groupKey: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
     });
+
+    if (tenantId && mediaAssets.length === 0) {
+      mediaAssets = await prisma.mediaAsset.findMany({
+        where: { tenantId: null },
+        orderBy: [{ groupKey: "asc" }, { sortOrder: "asc" }, { createdAt: "desc" }]
+      });
+    }
 
     return {
       databaseReady: true,

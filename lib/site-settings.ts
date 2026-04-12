@@ -1,7 +1,7 @@
-import { cache } from "react";
 import { Prisma } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
+import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
 export type PublicSiteSettings = {
   siteName: string;
@@ -63,27 +63,38 @@ function normalizeDomain(value: string) {
     .toLowerCase();
 }
 
-export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings> => {
+export async function getPublicSiteSettings(): Promise<PublicSiteSettings> {
   if (!process.env.DATABASE_URL) {
     return fallbackSettings;
   }
 
   try {
-    const rows = await prisma.siteSetting.findMany({
+    const tenant = await resolveTenantForCurrentRequest();
+    const settingKeys = [
+      "site_name",
+      "site_domain",
+      "site_tagline",
+      "hotline",
+      "contact_email",
+      "zalo_hotline",
+      "service_pricing_image"
+    ];
+
+    let rows = await prisma.siteSetting.findMany({
       where: {
-        key: {
-          in: [
-            "site_name",
-            "site_domain",
-            "site_tagline",
-            "hotline",
-            "contact_email",
-            "zalo_hotline",
-            "service_pricing_image"
-          ]
-        }
+        ...whereByTenantId(tenant?.id ?? null),
+        key: { in: settingKeys }
       }
     });
+
+    if (tenant?.id && rows.length === 0) {
+      rows = await prisma.siteSetting.findMany({
+        where: {
+          tenantId: null,
+          key: { in: settingKeys }
+        }
+      });
+    }
 
     const map = new Map(rows.map((row) => [row.key, row]));
     const siteName =
@@ -148,4 +159,4 @@ export const getPublicSiteSettings = cache(async (): Promise<PublicSiteSettings>
   } catch {
     return fallbackSettings;
   }
-});
+}

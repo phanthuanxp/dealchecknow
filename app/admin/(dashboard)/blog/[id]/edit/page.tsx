@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminBlogEditorForm } from "@/components/admin/blog-editor-form";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 type AdminBlogEditPageProps = {
   params: Promise<{
@@ -20,8 +22,12 @@ async function getBlogEditData(id: string) {
   }
 
   try {
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
     const [categories, post] = await Promise.all([
       prisma.blogCategory.findMany({
+        where: whereByTenantId(tenantId),
         orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
         select: {
           id: true,
@@ -29,8 +35,15 @@ async function getBlogEditData(id: string) {
           isActive: true
         }
       }),
-      prisma.blogPost.findUnique({
-        where: { id },
+      prisma.blogPost.findFirst({
+        where: {
+          id,
+          ...(tenantId
+            ? {
+                OR: [{ tenantId }, { tenantId: null }]
+              }
+            : {})
+        },
         select: {
           id: true,
           title: true,
@@ -47,9 +60,22 @@ async function getBlogEditData(id: string) {
       })
     ]);
 
+    const resolvedCategories =
+      tenantId && categories.length === 0
+        ? await prisma.blogCategory.findMany({
+            where: { tenantId: null },
+            orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+            select: {
+              id: true,
+              name: true,
+              isActive: true
+            }
+          })
+        : categories;
+
     return {
       databaseReady: true,
-      categories,
+      categories: resolvedCategories,
       post
     };
   } catch {

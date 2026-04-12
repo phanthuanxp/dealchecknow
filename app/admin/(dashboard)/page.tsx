@@ -2,6 +2,8 @@ import Link from "next/link";
 import { PublishStatus } from "@prisma/client";
 
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
 type DashboardStats = {
   leadCount: number;
@@ -25,6 +27,9 @@ async function getDashboardStats(): Promise<DashboardStats> {
   }
 
   try {
+    const session = await auth();
+    const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
     const serviceTableCheck = await prisma.$queryRaw<Array<{ table_exists: boolean }>>`
       SELECT EXISTS (
         SELECT 1
@@ -36,22 +41,39 @@ async function getDashboardStats(): Promise<DashboardStats> {
     const hasServiceTable = Boolean(serviceTableCheck[0]?.table_exists);
 
     const [leadCount, blogCount, faqCount, pricingCount, testimonialCount, serviceCount] = await Promise.all([
-      prisma.quoteRequest.count(),
+      prisma.quoteRequest.count({
+        where: whereByTenantId(tenantId)
+      }),
       prisma.blogPost.count({
-        where: { status: PublishStatus.PUBLISHED }
+        where: {
+          ...whereByTenantId(tenantId),
+          status: PublishStatus.PUBLISHED
+        }
       }),
       prisma.faq.count({
-        where: { isActive: true }
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        }
       }),
       prisma.pricingItem.count({
-        where: { isActive: true }
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        }
       }),
       prisma.testimonial.count({
-        where: { isActive: true }
+        where: {
+          ...whereByTenantId(tenantId),
+          isActive: true
+        }
       }),
       hasServiceTable
         ? prisma.servicePage.count({
-            where: { isPublished: true }
+            where: {
+              ...whereByTenantId(tenantId),
+              isPublished: true
+            }
           })
         : Promise.resolve(0)
     ]);

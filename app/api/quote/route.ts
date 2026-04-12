@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getBaseSiteUrl } from "@/lib/seo";
 import { sendQuoteRequestTelegram } from "@/lib/telegram";
+import { resolveTenantForRequest } from "@/lib/tenant";
 import {
   parseVietnamDateTimeLocal,
   quoteRequestSchema,
@@ -106,6 +107,7 @@ export async function POST(request: Request) {
 
   const submittedAt = new Date();
   const siteUrl = getBaseSiteUrl();
+  const tenant = await resolveTenantForRequest(request);
 
   const estimatedPriceNumber = normalizeDesiredPrice(data.desiredPrice);
 
@@ -113,6 +115,7 @@ export async function POST(request: Request) {
   try {
     const createdLead = await prisma.quoteRequest.create({
       data: {
+        tenantId: tenant?.id ?? null,
         fullName: data.fullName,
         phone: data.contactPhoneZalo,
         pickupLocation: data.pickupLocation,

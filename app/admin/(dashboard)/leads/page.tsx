@@ -1,7 +1,9 @@
 import { QuoteRequestStatus, type Prisma } from "@prisma/client";
 
 import { AdminLeadsManager } from "@/components/admin/leads-manager";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 import { tripTypeLabelMap } from "@/lib/validation";
 
 type LeadStatusFilter = "ALL" | QuoteRequestStatus;
@@ -97,6 +99,12 @@ async function getLeadsData(searchParams: Record<string, string | string[] | und
   }
 
   const where: Prisma.QuoteRequestWhereInput = {};
+  const session = await auth();
+  const tenantId = await resolveTenantIdForSessionUser(session?.user);
+
+  if (tenantId) {
+    where.tenantId = tenantId;
+  }
 
   if (status !== "ALL") {
     where.status = status;
@@ -111,7 +119,7 @@ async function getLeadsData(searchParams: Record<string, string | string[] | und
   }
 
   try {
-    const [leads, groupedStatus] = await Promise.all([
+    let [leads, groupedStatus] = await Promise.all([
       prisma.quoteRequest.findMany({
         where,
         include: {
@@ -127,12 +135,44 @@ async function getLeadsData(searchParams: Record<string, string | string[] | und
         take: 200
       }),
       prisma.quoteRequest.groupBy({
+        where: whereByTenantId(tenantId),
         by: ["status"],
         _count: {
           _all: true
         }
       })
     ]);
+
+    if (tenantId && leads.length === 0) {
+      const fallbackWhere: Prisma.QuoteRequestWhereInput = {
+        ...where,
+        tenantId: null
+      };
+
+      [leads, groupedStatus] = await Promise.all([
+        prisma.quoteRequest.findMany({
+          where: fallbackWhere,
+          include: {
+            handledBy: {
+              select: {
+                fullName: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: sort === "oldest" ? "asc" : "desc"
+          },
+          take: 200
+        }),
+        prisma.quoteRequest.groupBy({
+          where: { tenantId: null },
+          by: ["status"],
+          _count: {
+            _all: true
+          }
+        })
+      ]);
+    }
 
     const countByStatus: Record<QuoteRequestStatus, number> = {
       NEW: 0,
