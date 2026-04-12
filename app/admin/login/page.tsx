@@ -90,7 +90,7 @@ export default async function AdminLoginPage({ searchParams }: LoginPageProps) {
               required
               autoComplete="email"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-              placeholder="admin@taxininhbinh.com"
+              placeholder="info@30nice.vn"
             />
           </div>
 

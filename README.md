@@ -88,6 +88,29 @@ Sau khi chạy seed, tài khoản mặc định:
 - Password: `Admin@123456`
 - Role: `ADMIN`
 
+Nếu chạy mô hình CMS đa domain (giai đoạn 1), dùng thêm script provision:
+
+```bash
+# Linux/macOS
+BOOTSTRAP_ADMINTRIP_PASSWORD="your_password_1" \
+BOOTSTRAP_QUANLYCP_PASSWORD="your_password_2" \
+npm run prisma:provision:stage1
+```
+
+```powershell
+# Windows PowerShell
+$env:BOOTSTRAP_ADMINTRIP_PASSWORD="your_password_1"
+$env:BOOTSTRAP_QUANLYCP_PASSWORD="your_password_2"
+npm run prisma:provision:stage1
+```
+
+Script này sẽ:
+
+- Upsert tenant/domain cho phase 1 (`taxininhbinh.com`, `taxigiabinh.vn`, `taxitamdao.com`, `taxibacninh.vn`).
+- Upsert 2 tài khoản admin:
+  - `info@30nice.vn`
+  - `phamvanthuanjp@gmail.com`
+
 Khuyến nghị production:
 
 1. Đăng nhập AdminCP bằng tài khoản seed.
@@ -102,7 +125,7 @@ npm run dev
 Truy cập:
 
 - Public site: [http://localhost:3000](http://localhost:3000)
-- Admin login: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+- Admin login: [http://localhost:3000/admincp/login](http://localhost:3000/admincp/login)
 
 ## 8) Deploy lên Vercel
 
