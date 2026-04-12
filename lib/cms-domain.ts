@@ -1,5 +1,10 @@
 const ADMIN_PATH_PREFIXES = ["/admin", "/admincp"];
 
+function isRedirectEnabled() {
+  const raw = process.env.CMS_ADMIN_REDIRECT_ENABLED?.trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes";
+}
+
 function normalizeCmsBaseUrl(raw: string | undefined) {
   if (!raw) {
     return null;
@@ -39,6 +44,10 @@ export function getCmsAdminRedirectUrl(request: {
   headers: Headers;
 }) {
   if (process.env.NODE_ENV !== "production") {
+    return null;
+  }
+
+  if (!isRedirectEnabled()) {
     return null;
   }
 
