@@ -46,12 +46,21 @@ function parseOptionalInt(value: FormDataEntryValue | null) {
   return numberValue;
 }
 
-async function resolveUniqueCode(baseCode: string) {
+async function resolveUniqueCode(baseCode: string, tenantId: string | null) {
   let candidate = baseCode;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.mediaAsset.findUnique({ where: { code: candidate } });
+    const existing = await prisma.mediaAsset.findFirst({
+      where: {
+        code: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing) {
       return candidate;
     }
@@ -163,7 +172,7 @@ export async function POST(request: Request) {
 
   try {
     const sanitizedCode = toSlug(parsed.data.code ?? parsed.data.title);
-    const code = await resolveUniqueCode(sanitizedCode);
+    const code = await resolveUniqueCode(sanitizedCode, tenantId);
     const extension = getFileExtension(file);
     const pathname = `media/${parsed.data.groupKey}/${code}-${Date.now()}.${extension}`;
 

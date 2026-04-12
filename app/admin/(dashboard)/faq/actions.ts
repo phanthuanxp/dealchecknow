@@ -77,12 +77,21 @@ function failure(message: string): FaqActionState {
   return { status: "error", message };
 }
 
-async function resolveUniqueSlug(baseSlug: string, currentId?: string) {
+async function resolveUniqueSlug(baseSlug: string, tenantId: string | null, currentId?: string) {
   let candidate = baseSlug;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.faq.findUnique({ where: { slug: candidate } });
+    const existing = await prisma.faq.findFirst({
+      where: {
+        slug: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing || existing.id === currentId) {
       return candidate;
     }
@@ -127,7 +136,7 @@ export async function createFaqAction(
   }
 
   try {
-    const slug = await resolveUniqueSlug(parsed.data.slug);
+    const slug = await resolveUniqueSlug(parsed.data.slug, authError.tenantId);
 
     await prisma.faq.create({
       data: {
@@ -187,7 +196,7 @@ export async function updateFaqAction(
       return failure("KhÃ´ng tÃ¬m tháº¥y FAQ cáº§n cáº­p nháº­t.");
     }
 
-    const slug = await resolveUniqueSlug(parsed.data.slug, parsed.data.id);
+    const slug = await resolveUniqueSlug(parsed.data.slug, authError.tenantId, parsed.data.id);
 
     await prisma.faq.update({
       where: { id: existing.id },

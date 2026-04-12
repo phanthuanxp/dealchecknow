@@ -73,13 +73,24 @@ function failure(message: string): CategoryActionState {
   return { status: "error", message };
 }
 
-async function resolveUniqueCategorySlug(baseSlug: string, currentId?: string) {
+async function resolveUniqueCategorySlug(
+  baseSlug: string,
+  tenantId: string | null,
+  currentId?: string
+) {
   let candidate = baseSlug;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.blogCategory.findUnique({
-      where: { slug: candidate },
+    const existing = await prisma.blogCategory.findFirst({
+      where: {
+        slug: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
       select: { id: true }
     });
 
@@ -128,7 +139,7 @@ export async function createCategoryAction(
   }
 
   try {
-    const slug = await resolveUniqueCategorySlug(parsed.data.slug);
+    const slug = await resolveUniqueCategorySlug(parsed.data.slug, authResult.tenantId);
 
     await prisma.blogCategory.create({
       data: {
@@ -188,7 +199,11 @@ export async function updateCategoryAction(
       return failure("KhÃ´ng tÃ¬m tháº¥y danh má»¥c cáº§n cáº­p nháº­t.");
     }
 
-    const slug = await resolveUniqueCategorySlug(parsed.data.slug, parsed.data.id);
+    const slug = await resolveUniqueCategorySlug(
+      parsed.data.slug,
+      authResult.tenantId,
+      parsed.data.id
+    );
 
     await prisma.blogCategory.update({
       where: { id: existingCategory.id },

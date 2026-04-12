@@ -179,12 +179,25 @@ async function ensureEditorRole(): Promise<EditorGuard> {
   return { tenantId };
 }
 
-async function resolveUniqueSlug(baseSlug: string, currentId?: string) {
+async function resolveUniqueSlug(
+  baseSlug: string,
+  tenantId: string | null,
+  currentId?: string
+) {
   let suffix = 0;
 
   while (suffix < 300) {
     const candidate = suffix === 0 ? baseSlug : `${baseSlug}-${suffix + 1}`.slice(0, 180);
-    const existing = await prisma.servicePage.findUnique({ where: { slug: candidate } });
+    const existing = await prisma.servicePage.findFirst({
+      where: {
+        slug: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing || existing.id === currentId) {
       return candidate;
     }
@@ -313,7 +326,7 @@ export async function createServiceAction(
   }
 
   try {
-    const slug = await resolveUniqueSlug(generatedSlug);
+    const slug = await resolveUniqueSlug(generatedSlug, guard.tenantId);
     const serviceData = buildServiceData(parsed.data, slug);
 
     const created = await prisma.servicePage.create({
@@ -397,7 +410,7 @@ export async function updateServiceAction(
       return failure("Không thể tạo slug hợp lệ. Vui lòng nhập lại tiêu đề.");
     }
 
-    const slug = await resolveUniqueSlug(generatedSlug, existing.id);
+    const slug = await resolveUniqueSlug(generatedSlug, guard.tenantId, existing.id);
     const serviceData = buildServiceData(parsed.data, slug);
 
     const updated = await prisma.servicePage.update({

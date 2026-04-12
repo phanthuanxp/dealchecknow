@@ -110,13 +110,24 @@ function resolveOptionalUrl(value: string) {
   }
 }
 
-async function resolveUniquePostSlug(baseSlug: string, currentId?: string) {
+async function resolveUniquePostSlug(
+  baseSlug: string,
+  tenantId: string | null,
+  currentId?: string
+) {
   let candidate = baseSlug;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.blogPost.findUnique({
-      where: { slug: candidate },
+    const existing = await prisma.blogPost.findFirst({
+      where: {
+        slug: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      },
       select: { id: true }
     });
 
@@ -215,7 +226,7 @@ export async function createBlogPostAction(
       return failure("Danh mục đã chọn không tồn tại.");
     }
 
-    const slug = await resolveUniquePostSlug(normalizedSlug);
+    const slug = await resolveUniquePostSlug(normalizedSlug, authResult.tenantId);
     const isPublished = parsed.data.status === PublishStatus.PUBLISHED;
     const publishedAt = isPublished ? parsedPublishDate ?? new Date() : parsedPublishDate;
 
@@ -322,7 +333,7 @@ export async function updateBlogPostAction(
       return failure("Danh mục đã chọn không tồn tại.");
     }
 
-    const slug = await resolveUniquePostSlug(normalizedSlug, parsed.data.id);
+    const slug = await resolveUniquePostSlug(normalizedSlug, authResult.tenantId, parsed.data.id);
     const isPublished = parsed.data.status === PublishStatus.PUBLISHED;
     const publishedAt = isPublished ? parsedPublishDate ?? new Date() : parsedPublishDate;
 

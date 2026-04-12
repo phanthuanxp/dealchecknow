@@ -83,12 +83,21 @@ function failure(message: string): PricingActionState {
   return { status: "error", message };
 }
 
-async function resolveUniqueCode(baseCode: string, currentId?: string) {
+async function resolveUniqueCode(baseCode: string, tenantId: string | null, currentId?: string) {
   let candidate = baseCode;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.pricingItem.findUnique({ where: { code: candidate } });
+    const existing = await prisma.pricingItem.findFirst({
+      where: {
+        code: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing || existing.id === currentId) {
       return candidate;
     }
@@ -188,7 +197,7 @@ export async function createPricingRouteAction(
 
   try {
     for (const tier of tiers) {
-      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`);
+      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`, authError.tenantId);
       await prisma.pricingItem.create({
         data: {
           tenantId: authError.tenantId,
@@ -312,7 +321,7 @@ export async function updatePricingRouteAction(
         continue;
       }
 
-      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`);
+      const code = await resolveUniqueCode(`${baseCode}-${tier.codeSuffix}`, authError.tenantId);
       await prisma.pricingItem.create({
         data: {
           code,

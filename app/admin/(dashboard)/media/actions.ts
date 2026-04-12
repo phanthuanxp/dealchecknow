@@ -87,12 +87,21 @@ async function ensureEditorRole() {
   return { tenantId };
 }
 
-async function resolveUniqueCode(baseCode: string, currentId?: string) {
+async function resolveUniqueCode(baseCode: string, tenantId: string | null, currentId?: string) {
   let candidate = baseCode;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.mediaAsset.findUnique({ where: { code: candidate } });
+    const existing = await prisma.mediaAsset.findFirst({
+      where: {
+        code: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing || existing.id === currentId) {
       return candidate;
     }
@@ -142,7 +151,7 @@ export async function createMediaAction(
   }
 
   try {
-    const code = await resolveUniqueCode(parsed.data.code);
+    const code = await resolveUniqueCode(parsed.data.code, authError.tenantId);
     await prisma.mediaAsset.create({
       data: {
         tenantId: authError.tenantId,
@@ -218,7 +227,7 @@ export async function updateMediaAction(
       return failure("KhÃ´ng tÃ¬m tháº¥y áº£nh cáº§n cáº­p nháº­t.");
     }
 
-    const code = await resolveUniqueCode(parsed.data.code, parsed.data.id);
+    const code = await resolveUniqueCode(parsed.data.code, authError.tenantId, parsed.data.id);
     await prisma.mediaAsset.update({
       where: { id: existingMedia.id },
       data: {

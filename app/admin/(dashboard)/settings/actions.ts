@@ -82,6 +82,56 @@ function failure(message: string): SettingsActionState {
   return { status: "error", message };
 }
 
+type SettingPayload = {
+  value: Prisma.InputJsonValue;
+  description: string;
+  groupKey: string;
+  isPublic: boolean;
+};
+
+async function upsertSettingForTenant(
+  tx: Prisma.TransactionClient,
+  tenantId: string | null,
+  key: string,
+  payload: SettingPayload
+) {
+  const existing = await tx.siteSetting.findFirst({
+    where: {
+      key,
+      ...(tenantId
+        ? {
+            OR: [{ tenantId }, { tenantId: null }]
+          }
+        : {})
+    },
+    select: { id: true, tenantId: true }
+  });
+
+  if (existing) {
+    return tx.siteSetting.update({
+      where: { id: existing.id },
+      data: {
+        tenantId: tenantId ?? existing.tenantId,
+        value: payload.value,
+        description: payload.description,
+        groupKey: payload.groupKey,
+        isPublic: payload.isPublic
+      }
+    });
+  }
+
+  return tx.siteSetting.create({
+    data: {
+      tenantId,
+      key,
+      value: payload.value,
+      description: payload.description,
+      groupKey: payload.groupKey,
+      isPublic: payload.isPublic
+    }
+  });
+}
+
 export async function updateSiteSettingsAction(
   _prev: SettingsActionState,
   formData: FormData
@@ -118,146 +168,62 @@ export async function updateSiteSettingsAction(
   const servicePricingImageAlt = parsed.data.servicePricingImageAlt.trim();
 
   try {
-    await prisma.$transaction([
-      prisma.siteSetting.upsert({
-        where: { key: "site_name" },
-        update: {
-          tenantId: authError.tenantId,
-          value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
-          description: "Tên website công khai",
-          groupKey: "general",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "site_name",
-          value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
-          description: "Tên website công khai",
-          groupKey: "general",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "site_domain" },
-        update: {
-          tenantId: authError.tenantId,
-          value: { value: siteDomain } as Prisma.InputJsonValue,
-          description: "Tên miền website công khai",
-          groupKey: "general",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "site_domain",
-          value: { value: siteDomain } as Prisma.InputJsonValue,
-          description: "Tên miền website công khai",
-          groupKey: "general",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "site_tagline" },
-        update: {
-          tenantId: authError.tenantId,
-          value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
-          description: "Khẩu hiệu website công khai",
-          groupKey: "general",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "site_tagline",
-          value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
-          description: "Khẩu hiệu website công khai",
-          groupKey: "general",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "hotline" },
-        update: {
-          tenantId: authError.tenantId,
-          value: {
-            value: hotlineValue,
-            display: parsed.data.hotlineDisplay
-          } as Prisma.InputJsonValue,
-          description: "Số hotline chính",
-          groupKey: "contact",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "hotline",
-          value: {
-            value: hotlineValue,
-            display: parsed.data.hotlineDisplay
-          } as Prisma.InputJsonValue,
-          description: "Số hotline chính",
-          groupKey: "contact",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "contact_email" },
-        update: {
-          tenantId: authError.tenantId,
-          value: { value: parsed.data.email } as Prisma.InputJsonValue,
-          description: "Email hỗ trợ công khai",
-          groupKey: "contact",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "contact_email",
-          value: { value: parsed.data.email } as Prisma.InputJsonValue,
-          description: "Email hỗ trợ công khai",
-          groupKey: "contact",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "zalo_hotline" },
-        update: {
-          tenantId: authError.tenantId,
-          value: { value: zaloNumber } as Prisma.InputJsonValue,
-          description: "Số Zalo hotline",
-          groupKey: "contact",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "zalo_hotline",
-          value: { value: zaloNumber } as Prisma.InputJsonValue,
-          description: "Số Zalo hotline",
-          groupKey: "contact",
-          isPublic: true
-        }
-      }),
-      prisma.siteSetting.upsert({
-        where: { key: "service_pricing_image" },
-        update: {
-          tenantId: authError.tenantId,
-          value: {
-            url: servicePricingImageUrl,
-            alt: servicePricingImageAlt
-          } as Prisma.InputJsonValue,
-          description: "Ảnh minh họa khung bảng giá trên các trang dịch vụ",
-          groupKey: "service",
-          isPublic: true
-        },
-        create: {
-          tenantId: authError.tenantId,
-          key: "service_pricing_image",
-          value: {
-            url: servicePricingImageUrl,
-            alt: servicePricingImageAlt
-          } as Prisma.InputJsonValue,
-          description: "Ảnh minh họa khung bảng giá trên các trang dịch vụ",
-          groupKey: "service",
-          isPublic: true
-        }
-      })
-    ]);
+    await prisma.$transaction(async (tx) => {
+      await upsertSettingForTenant(tx, authError.tenantId, "site_name", {
+        value: { text: parsed.data.siteName } as Prisma.InputJsonValue,
+        description: "Tên website công khai",
+        groupKey: "general",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "site_domain", {
+        value: { value: siteDomain } as Prisma.InputJsonValue,
+        description: "Tên miền website công khai",
+        groupKey: "general",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "site_tagline", {
+        value: { text: parsed.data.siteTagline } as Prisma.InputJsonValue,
+        description: "Khẩu hiệu website công khai",
+        groupKey: "general",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "hotline", {
+        value: {
+          value: hotlineValue,
+          display: parsed.data.hotlineDisplay
+        } as Prisma.InputJsonValue,
+        description: "Số hotline chính",
+        groupKey: "contact",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "contact_email", {
+        value: { value: parsed.data.email } as Prisma.InputJsonValue,
+        description: "Email hỗ trợ công khai",
+        groupKey: "contact",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "zalo_hotline", {
+        value: { value: zaloNumber } as Prisma.InputJsonValue,
+        description: "Số Zalo hotline",
+        groupKey: "contact",
+        isPublic: true
+      });
+
+      await upsertSettingForTenant(tx, authError.tenantId, "service_pricing_image", {
+        value: {
+          url: servicePricingImageUrl,
+          alt: servicePricingImageAlt
+        } as Prisma.InputJsonValue,
+        description: "Ảnh minh họa khung bảng giá trên các trang dịch vụ",
+        groupKey: "service",
+        isPublic: true
+      });
+    });
 
     const serviceSlugs = await prisma.servicePage.findMany({
       where: {

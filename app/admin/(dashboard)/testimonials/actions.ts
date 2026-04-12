@@ -73,12 +73,21 @@ function failure(message: string): TestimonialActionState {
   return { status: "error", message };
 }
 
-async function resolveUniqueCode(baseCode: string, currentId?: string) {
+async function resolveUniqueCode(baseCode: string, tenantId: string | null, currentId?: string) {
   let candidate = baseCode;
   let suffix = 1;
 
   while (candidate) {
-    const existing = await prisma.testimonial.findUnique({ where: { code: candidate } });
+    const existing = await prisma.testimonial.findFirst({
+      where: {
+        code: candidate,
+        ...(tenantId
+          ? {
+              OR: [{ tenantId }, { tenantId: null }]
+            }
+          : {})
+      }
+    });
     if (!existing || existing.id === currentId) {
       return candidate;
     }
@@ -124,7 +133,7 @@ export async function createTestimonialAction(
   }
 
   try {
-    const code = await resolveUniqueCode(parsed.data.code);
+    const code = await resolveUniqueCode(parsed.data.code, authError.tenantId);
 
     await prisma.testimonial.create({
       data: {
@@ -194,7 +203,7 @@ export async function updateTestimonialAction(
       return failure("KhÃ´ng tÃ¬m tháº¥y testimonial cáº§n cáº­p nháº­t.");
     }
 
-    const code = await resolveUniqueCode(parsed.data.code, parsed.data.id);
+    const code = await resolveUniqueCode(parsed.data.code, authError.tenantId, parsed.data.id);
 
     await prisma.testimonial.update({
       where: { id: existing.id },

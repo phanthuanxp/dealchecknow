@@ -7,7 +7,64 @@ async function hashPassword(input: string) {
   return hash(input, 12);
 }
 
-async function seedAdminUser() {
+function normalizeDomain(value: string | undefined | null) {
+  if (!value) {
+    return null;
+  }
+
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "")
+    .replace(/^www\./, "");
+}
+
+async function seedDefaultTenant() {
+  const slug =
+    process.env.DEFAULT_TENANT_SLUG?.trim() || process.env.TENANT_SLUG?.trim() || "taxininhbinh";
+  const name = process.env.DEFAULT_TENANT_NAME?.trim() || "Taxi Ninh Binh";
+
+  const tenant = await prisma.tenant.upsert({
+    where: { slug },
+    update: {
+      name,
+      isActive: true
+    },
+    create: {
+      slug,
+      name,
+      isActive: true
+    }
+  });
+
+  const configuredDomain = normalizeDomain(process.env.NEXT_PUBLIC_SITE_URL);
+  const domains = Array.from(
+    new Set([configuredDomain, "taxininhbinh.com", "www.taxininhbinh.com"].filter(Boolean))
+  ) as string[];
+
+  for (let index = 0; index < domains.length; index += 1) {
+    const domain = domains[index];
+    await prisma.tenantDomain.upsert({
+      where: { domain },
+      update: {
+        tenantId: tenant.id,
+        isPrimary: index === 0,
+        isActive: true
+      },
+      create: {
+        tenantId: tenant.id,
+        domain,
+        isPrimary: index === 0,
+        isActive: true
+      }
+    });
+  }
+
+  return tenant;
+}
+
+async function seedAdminUser(tenantId: string) {
   const adminEmail = "admin@taxininhbinh.com";
   const adminPassword = "Admin@123456";
   const passwordHash = await hashPassword(adminPassword);
@@ -18,6 +75,7 @@ async function seedAdminUser() {
       passwordHash,
       fullName: "Taxi Ninh Binh Admin",
       role: UserRole.ADMIN,
+      tenantId,
       isActive: true
     },
     create: {
@@ -25,12 +83,13 @@ async function seedAdminUser() {
       passwordHash,
       fullName: "Taxi Ninh Binh Admin",
       role: UserRole.ADMIN,
+      tenantId,
       isActive: true
     }
   });
 }
 
-async function seedSiteSectionsAndBlocks() {
+async function seedSiteSectionsAndBlocks(tenantId: string) {
   const sections = [
     {
       key: "home-hero",
@@ -102,8 +161,14 @@ async function seedSiteSectionsAndBlocks() {
 
   for (const section of sections) {
     const upserted = await prisma.siteSection.upsert({
-      where: { key: section.key },
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: section.key
+        }
+      },
       update: {
+        tenantId,
         name: section.name,
         type: section.type,
         title: section.title,
@@ -112,6 +177,7 @@ async function seedSiteSectionsAndBlocks() {
         isActive: true
       },
       create: {
+        tenantId,
         key: section.key,
         name: section.name,
         type: section.type,
@@ -357,6 +423,7 @@ async function seedSiteSectionsAndBlocks() {
         }
       },
       update: {
+        tenantId,
         blockType: block.blockType,
         title: block.title,
         content: block.content as Prisma.InputJsonValue,
@@ -364,6 +431,7 @@ async function seedSiteSectionsAndBlocks() {
         isActive: true
       },
       create: {
+        tenantId,
         sectionId,
         blockKey: block.blockKey,
         blockType: block.blockType,
@@ -376,7 +444,7 @@ async function seedSiteSectionsAndBlocks() {
   }
 }
 
-async function seedPricingItems() {
+async function seedPricingItems(tenantId: string) {
   const pricingItems = [
     {
       code: "nb-tamcoc-sedan",
@@ -418,8 +486,14 @@ async function seedPricingItems() {
 
   for (const item of pricingItems) {
     await prisma.pricingItem.upsert({
-      where: { code: item.code },
+      where: {
+        tenantId_code: {
+          tenantId,
+          code: item.code
+        }
+      },
       update: {
+        tenantId,
         routeName: item.routeName,
         fromLocation: item.fromLocation,
         toLocation: item.toLocation,
@@ -432,6 +506,7 @@ async function seedPricingItems() {
         sortOrder: item.sortOrder
       },
       create: {
+        tenantId,
         code: item.code,
         routeName: item.routeName,
         fromLocation: item.fromLocation,
@@ -448,7 +523,7 @@ async function seedPricingItems() {
   }
 }
 
-async function seedFaqs() {
+async function seedFaqs(tenantId: string) {
   const faqs = [
     {
       slug: "how-to-book",
@@ -474,14 +549,21 @@ async function seedFaqs() {
 
   for (const faq of faqs) {
     await prisma.faq.upsert({
-      where: { slug: faq.slug },
+      where: {
+        tenantId_slug: {
+          tenantId,
+          slug: faq.slug
+        }
+      },
       update: {
+        tenantId,
         question: faq.question,
         answer: faq.answer,
         isActive: true,
         sortOrder: faq.sortOrder
       },
       create: {
+        tenantId,
         slug: faq.slug,
         question: faq.question,
         answer: faq.answer,
@@ -492,7 +574,7 @@ async function seedFaqs() {
   }
 }
 
-async function seedTestimonials() {
+async function seedTestimonials(tenantId: string) {
   const testimonials = [
     {
       code: "review-ha-noi-family-trip",
@@ -530,8 +612,14 @@ async function seedTestimonials() {
 
   for (const item of testimonials) {
     await prisma.testimonial.upsert({
-      where: { code: item.code },
+      where: {
+        tenantId_code: {
+          tenantId,
+          code: item.code
+        }
+      },
       update: {
+        tenantId,
         customerName: item.customerName,
         content: item.content,
         rating: item.rating,
@@ -542,6 +630,7 @@ async function seedTestimonials() {
         sortOrder: item.sortOrder
       },
       create: {
+        tenantId,
         code: item.code,
         customerName: item.customerName,
         content: item.content,
@@ -556,7 +645,7 @@ async function seedTestimonials() {
   }
 }
 
-async function seedBlog(adminUserId: string) {
+async function seedBlog(adminUserId: string, tenantId: string) {
   const categories = [
     {
       name: "Travel Guide",
@@ -576,14 +665,21 @@ async function seedBlog(adminUserId: string) {
 
   for (const category of categories) {
     const upserted = await prisma.blogCategory.upsert({
-      where: { slug: category.slug },
+      where: {
+        tenantId_slug: {
+          tenantId,
+          slug: category.slug
+        }
+      },
       update: {
+        tenantId,
         name: category.name,
         description: category.description,
         isActive: true,
         sortOrder: category.sortOrder
       },
       create: {
+        tenantId,
         name: category.name,
         slug: category.slug,
         description: category.description,
@@ -644,8 +740,14 @@ async function seedBlog(adminUserId: string) {
     }
 
     await prisma.blogPost.upsert({
-      where: { slug: post.slug },
+      where: {
+        tenantId_slug: {
+          tenantId,
+          slug: post.slug
+        }
+      },
       update: {
+        tenantId,
         categoryId,
         authorId: adminUserId,
         title: post.title,
@@ -658,6 +760,7 @@ async function seedBlog(adminUserId: string) {
         tags: post.tags
       },
       create: {
+        tenantId,
         categoryId,
         authorId: adminUserId,
         title: post.title,
@@ -674,7 +777,7 @@ async function seedBlog(adminUserId: string) {
   }
 }
 
-async function seedSiteSettings() {
+async function seedSiteSettings(tenantId: string) {
   const settings = [
     {
       key: "site_name",
@@ -718,14 +821,21 @@ async function seedSiteSettings() {
 
   for (const setting of settings) {
     await prisma.siteSetting.upsert({
-      where: { key: setting.key },
+      where: {
+        tenantId_key: {
+          tenantId,
+          key: setting.key
+        }
+      },
       update: {
+        tenantId,
         value: setting.value as Prisma.InputJsonValue,
         description: setting.description,
         groupKey: setting.groupKey,
         isPublic: setting.isPublic
       },
       create: {
+        tenantId,
         key: setting.key,
         value: setting.value as Prisma.InputJsonValue,
         description: setting.description,
@@ -736,7 +846,7 @@ async function seedSiteSettings() {
   }
 }
 
-async function seedMediaAssets() {
+async function seedMediaAssets(tenantId: string) {
   const assets = [
     {
       code: "home-banner-1",
@@ -790,8 +900,14 @@ async function seedMediaAssets() {
 
   for (const item of assets) {
     await prisma.mediaAsset.upsert({
-      where: { code: item.code },
+      where: {
+        tenantId_code: {
+          tenantId,
+          code: item.code
+        }
+      },
       update: {
+        tenantId,
         title: item.title,
         url: item.url,
         altText: item.altText,
@@ -800,6 +916,7 @@ async function seedMediaAssets() {
         sortOrder: item.sortOrder
       },
       create: {
+        tenantId,
         code: item.code,
         title: item.title,
         url: item.url,
@@ -812,7 +929,7 @@ async function seedMediaAssets() {
   }
 }
 
-async function seedServicePages() {
+async function seedServicePages(tenantId: string) {
   const services = [
     {
       slug: "taxi-ha-noi-ninh-binh",
@@ -1058,8 +1175,14 @@ async function seedServicePages() {
 
   for (const service of services) {
     await prisma.servicePage.upsert({
-      where: { slug: service.slug },
+      where: {
+        tenantId_slug: {
+          tenantId,
+          slug: service.slug
+        }
+      },
       update: {
+        tenantId,
         title: service.title,
         shortDescription: service.shortDescription,
         metaTitle: service.metaTitle,
@@ -1085,6 +1208,7 @@ async function seedServicePages() {
         canonicalUrl: service.canonicalUrl || null
       },
       create: {
+        tenantId,
         title: service.title,
         slug: service.slug,
         shortDescription: service.shortDescription,
@@ -1115,15 +1239,16 @@ async function seedServicePages() {
 }
 
 async function main() {
-  const admin = await seedAdminUser();
-  await seedSiteSectionsAndBlocks();
-  await seedPricingItems();
-  await seedFaqs();
-  await seedTestimonials();
-  await seedBlog(admin.id);
-  await seedSiteSettings();
-  await seedMediaAssets();
-  await seedServicePages();
+  const tenant = await seedDefaultTenant();
+  const admin = await seedAdminUser(tenant.id);
+  await seedSiteSectionsAndBlocks(tenant.id);
+  await seedPricingItems(tenant.id);
+  await seedFaqs(tenant.id);
+  await seedTestimonials(tenant.id);
+  await seedBlog(admin.id, tenant.id);
+  await seedSiteSettings(tenant.id);
+  await seedMediaAssets(tenant.id);
+  await seedServicePages(tenant.id);
 }
 
 main()

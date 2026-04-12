@@ -153,7 +153,7 @@ model VerificationToken {
 model SiteSection {
   id          String      @id @default(cuid())
   tenantId    String?
-  key         String      @unique
+  key         String
   name        String
   type        SectionType @default(HOME)
   title       String?
@@ -167,6 +167,7 @@ model SiteSection {
 
   @@index([type, isActive, sortOrder])
   @@index([tenantId, type, isActive, sortOrder])
+  @@unique([tenantId, key])
 }
 
 model PageBlock {
@@ -193,7 +194,7 @@ model BlogCategory {
   id          String     @id @default(cuid())
   tenantId    String?
   name        String
-  slug        String     @unique
+  slug        String
   description String?
   isActive    Boolean    @default(true)
   sortOrder   Int        @default(0)
@@ -204,6 +205,7 @@ model BlogCategory {
 
   @@index([isActive, sortOrder])
   @@index([tenantId, isActive, sortOrder])
+  @@unique([tenantId, slug])
 }
 
 model BlogPost {
@@ -212,7 +214,7 @@ model BlogPost {
   categoryId     String
   authorId       String?
   title          String
-  slug           String        @unique
+  slug           String
   excerpt        String?       @db.Text
   content        String        @db.Text
   coverImageUrl  String?
@@ -232,12 +234,13 @@ model BlogPost {
   @@index([status, publishedAt])
   @@index([createdAt])
   @@index([tenantId, status, publishedAt])
+  @@unique([tenantId, slug])
 }
 
 model Faq {
   id        String   @id @default(cuid())
   tenantId  String?
-  slug      String   @unique
+  slug      String
   question  String
   answer    String   @db.Text
   isActive  Boolean  @default(true)
@@ -248,12 +251,13 @@ model Faq {
 
   @@index([isActive, sortOrder])
   @@index([tenantId, isActive, sortOrder])
+  @@unique([tenantId, slug])
 }
 
 model Testimonial {
   id           String   @id @default(cuid())
   tenantId     String?
-  code         String   @unique
+  code         String
   customerName String
   content      String   @db.Text
   rating       Int      @default(5)
@@ -268,12 +272,13 @@ model Testimonial {
 
   @@index([isActive, isFeatured, sortOrder])
   @@index([tenantId, isActive, isFeatured, sortOrder])
+  @@unique([tenantId, code])
 }
 
 model PricingItem {
   id           String   @id @default(cuid())
   tenantId     String?
-  code         String   @unique
+  code         String
   routeName    String
   fromLocation String
   toLocation   String
@@ -294,6 +299,7 @@ model PricingItem {
   @@index([isActive, sortOrder])
   @@index([showOnHome, isActive, sortOrder])
   @@index([tenantId, isActive, sortOrder])
+  @@unique([tenantId, code])
 }
 
 model QuoteRequest {
@@ -355,7 +361,7 @@ model ContactMessage {
 model SiteSetting {
   id          String   @id @default(cuid())
   tenantId    String?
-  key         String   @unique
+  key         String
   value       Json
   description String?
   groupKey    String   @default("general")
@@ -366,12 +372,13 @@ model SiteSetting {
 
   @@index([groupKey, isPublic])
   @@index([tenantId, groupKey, isPublic])
+  @@unique([tenantId, key])
 }
 
 model MediaAsset {
   id        String   @id @default(cuid())
   tenantId  String?
-  code      String   @unique
+  code      String
   title     String
   url       String
   altText   String?
@@ -386,13 +393,14 @@ model MediaAsset {
 
   @@index([groupKey, isActive, sortOrder])
   @@index([tenantId, groupKey, isActive, sortOrder])
+  @@unique([tenantId, code])
 }
 
 model ServicePage {
   id                  String   @id @default(cuid())
   tenantId            String?
   title               String
-  slug                String   @unique
+  slug                String
   shortDescription    String   @db.Text
   metaTitle           String?
   metaDescription     String?
@@ -420,4 +428,5 @@ model ServicePage {
   @@index([isPublished, sortOrder])
   @@index([sortOrder])
   @@index([tenantId, isPublished, sortOrder])
+  @@unique([tenantId, slug])
 }
