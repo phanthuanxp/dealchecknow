@@ -45,8 +45,49 @@ enum ContactMessageStatus {
   SPAM
 }
 
+model Tenant {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+  name            String
+  cmsDomain       String?
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  domains         TenantDomain[]
+  users           User[]
+  siteSections    SiteSection[]
+  pageBlocks      PageBlock[]
+  blogCategories  BlogCategory[]
+  blogPosts       BlogPost[]
+  faqs            Faq[]
+  testimonials    Testimonial[]
+  pricingItems    PricingItem[]
+  quoteRequests   QuoteRequest[]
+  contactMessages ContactMessage[]
+  siteSettings    SiteSetting[]
+  mediaAssets     MediaAsset[]
+  servicePages    ServicePage[]
+
+  @@index([isActive, slug])
+}
+
+model TenantDomain {
+  id        String   @id @default(cuid())
+  tenantId  String
+  domain    String   @unique
+  isPrimary Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, isPrimary])
+  @@index([tenantId, isActive])
+}
+
 model User {
   id                     String           @id @default(cuid())
+  tenantId               String?
   email                  String           @unique
   passwordHash           String
   fullName               String
@@ -61,22 +102,24 @@ model User {
   posts                  BlogPost[]       @relation("BlogAuthor")
   quoteRequestsHandled   QuoteRequest[]   @relation("QuoteHandledBy")
   contactMessagesHandled ContactMessage[] @relation("ContactHandledBy")
+  tenant                 Tenant?          @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([role, isActive])
+  @@index([tenantId, role, isActive])
 }
 
 model Account {
-  id                String  @id @default(cuid())
+  id                String   @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refreshToken      String? @db.Text
-  accessToken       String? @db.Text
+  refreshToken      String?  @db.Text
+  accessToken       String?  @db.Text
   expiresAt         Int?
   tokenType         String?
   scope             String?
-  idToken           String? @db.Text
+  idToken           String?  @db.Text
   sessionState      String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -109,6 +152,7 @@ model VerificationToken {
 
 model SiteSection {
   id          String      @id @default(cuid())
+  tenantId    String?
   key         String      @unique
   name        String
   type        SectionType @default(HOME)
@@ -119,12 +163,15 @@ model SiteSection {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   blocks      PageBlock[]
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([type, isActive, sortOrder])
+  @@index([tenantId, type, isActive, sortOrder])
 }
 
 model PageBlock {
   id        String      @id @default(cuid())
+  tenantId  String?
   sectionId String
   blockKey  String
   blockType String      @default("text")
@@ -135,13 +182,16 @@ model PageBlock {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   section   SiteSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  tenant    Tenant?     @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@unique([sectionId, blockKey])
   @@index([sectionId, isActive, sortOrder])
+  @@index([tenantId, sectionId, isActive, sortOrder])
 }
 
 model BlogCategory {
   id          String     @id @default(cuid())
+  tenantId    String?
   name        String
   slug        String     @unique
   description String?
@@ -150,12 +200,15 @@ model BlogCategory {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   posts       BlogPost[]
+  tenant      Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([isActive, sortOrder])
+  @@index([tenantId, isActive, sortOrder])
 }
 
 model BlogPost {
   id             String        @id @default(cuid())
+  tenantId       String?
   categoryId     String
   authorId       String?
   title          String
@@ -173,14 +226,17 @@ model BlogPost {
   updatedAt      DateTime      @updatedAt
   category       BlogCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   author         User?         @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  tenant         Tenant?       @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([categoryId, status, publishedAt])
   @@index([status, publishedAt])
   @@index([createdAt])
+  @@index([tenantId, status, publishedAt])
 }
 
 model Faq {
   id        String   @id @default(cuid())
+  tenantId  String?
   slug      String   @unique
   question  String
   answer    String   @db.Text
@@ -188,12 +244,15 @@ model Faq {
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([isActive, sortOrder])
+  @@index([tenantId, isActive, sortOrder])
 }
 
 model Testimonial {
   id           String   @id @default(cuid())
+  tenantId     String?
   code         String   @unique
   customerName String
   content      String   @db.Text
@@ -205,12 +264,15 @@ model Testimonial {
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([isActive, isFeatured, sortOrder])
+  @@index([tenantId, isActive, isFeatured, sortOrder])
 }
 
 model PricingItem {
   id           String   @id @default(cuid())
+  tenantId     String?
   code         String   @unique
   routeName    String
   fromLocation String
@@ -226,14 +288,17 @@ model PricingItem {
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([vehicleType, isActive])
   @@index([isActive, sortOrder])
   @@index([showOnHome, isActive, sortOrder])
+  @@index([tenantId, isActive, sortOrder])
 }
 
 model QuoteRequest {
   id              String             @id @default(cuid())
+  tenantId        String?
   fullName        String
   phone           String
   email           String?
@@ -255,15 +320,18 @@ model QuoteRequest {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   handledBy       User?              @relation("QuoteHandledBy", fields: [handledById], references: [id], onDelete: SetNull)
+  tenant          Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([phone])
   @@index([email])
   @@index([handledById])
+  @@index([tenantId, status, createdAt])
 }
 
 model ContactMessage {
   id          String               @id @default(cuid())
+  tenantId    String?
   fullName    String
   phone       String?
   email       String?
@@ -275,15 +343,18 @@ model ContactMessage {
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
   handledBy   User?                @relation("ContactHandledBy", fields: [handledById], references: [id], onDelete: SetNull)
+  tenant      Tenant?              @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([status, createdAt])
   @@index([email])
   @@index([phone])
   @@index([handledById])
+  @@index([tenantId, status, createdAt])
 }
 
 model SiteSetting {
   id          String   @id @default(cuid())
+  tenantId    String?
   key         String   @unique
   value       Json
   description String?
@@ -291,29 +362,35 @@ model SiteSetting {
   isPublic    Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([groupKey, isPublic])
+  @@index([tenantId, groupKey, isPublic])
 }
 
 model MediaAsset {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  title       String
-  url         String
-  altText     String?
-  groupKey    String   @default("general")
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  width       Int?
-  height      Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  tenantId  String?
+  code      String   @unique
+  title     String
+  url       String
+  altText   String?
+  groupKey  String   @default("general")
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([groupKey, isActive, sortOrder])
+  @@index([tenantId, groupKey, isActive, sortOrder])
 }
 
 model ServicePage {
   id                  String   @id @default(cuid())
+  tenantId            String?
   title               String
   slug                String   @unique
   shortDescription    String   @db.Text
@@ -338,7 +415,9 @@ model ServicePage {
   canonicalUrl        String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+  tenant              Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   @@index([isPublished, sortOrder])
   @@index([sortOrder])
+  @@index([tenantId, isPublished, sortOrder])
 }
