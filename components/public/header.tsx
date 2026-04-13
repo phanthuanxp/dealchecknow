@@ -21,7 +21,7 @@ export async function PublicHeader() {
       <div className="mx-auto w-[90%] py-3">
         <div className="flex items-center justify-between gap-3 md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:gap-4">
           <Link href="/" className="group inline-flex min-w-0 items-center gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-600 to-sky-500 text-white shadow-md shadow-sky-900/20 transition group-hover:scale-105">
+            <span className="theme-brand-gradient inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-md transition group-hover:scale-105">
               <CarIcon className="h-5 w-5" />
             </span>
             <span className="min-w-0">
@@ -38,7 +38,7 @@ export async function PublicHeader() {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
+                    className="theme-nav-pill inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
                   >
                     {item.label}
                   </Link>
@@ -50,7 +50,7 @@ export async function PublicHeader() {
           <div className="hidden items-center gap-2 md:flex">
             <Link
               href={settings.hotlineTel}
-              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-900/20 transition hover:bg-emerald-700"
+              className="theme-primary-btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold shadow-sm transition"
             >
               <PhoneCallIcon className="h-4 w-4" />
               {settings.hotlineDisplay}
@@ -59,7 +59,7 @@ export async function PublicHeader() {
               href={settings.zaloUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-sky-300 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-100"
+              className="theme-outline-btn inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition"
             >
               <ZaloIcon className="h-4 w-4" />
               Chat Zalo
@@ -73,7 +73,7 @@ export async function PublicHeader() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
+                  className="theme-nav-pill inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:-translate-y-0.5"
                 >
                   {item.label}
                 </Link>

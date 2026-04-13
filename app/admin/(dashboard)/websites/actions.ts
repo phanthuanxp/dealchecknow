@@ -7,6 +7,10 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import {
+  normalizeTenantThemeInput,
+  upsertTenantThemeByTenantId
+} from "@/lib/tenant-theme";
+import {
   type TenantLifecycleConfig,
   upsertTenantLifecycleByTenantId
 } from "@/lib/tenant-lifecycle";
@@ -30,7 +34,15 @@ const baseWebsiteSchema = z.object({
   manualStatus: lifecycleStatusSchema,
   startsAt: z.string().trim().max(40, "Ngày bắt đầu không hợp lệ."),
   expiresAt: z.string().trim().max(40, "Ngày hết hạn không hợp lệ."),
-  graceDays: z.coerce.number().int().min(0, "Số ngày gia hạn phải >= 0.").max(365, "Số ngày gia hạn tối đa 365.")
+  graceDays: z.coerce.number().int().min(0, "Số ngày gia hạn phải >= 0.").max(365, "Số ngày gia hạn tối đa 365."),
+  themePreset: z.string().trim().max(40, "Theme preset không hợp lệ."),
+  themePrimaryColor: z.string().trim().max(20, "Màu chính không hợp lệ."),
+  themeSecondaryColor: z.string().trim().max(20, "Màu phụ không hợp lệ."),
+  themeAccentColor: z.string().trim().max(20, "Màu nhấn không hợp lệ."),
+  themeBackgroundFrom: z.string().trim().max(20, "Màu nền đầu không hợp lệ."),
+  themeBackgroundTo: z.string().trim().max(20, "Màu nền cuối không hợp lệ."),
+  themeHeadingFont: z.string().trim().max(120, "Font heading quá dài."),
+  themeBodyFont: z.string().trim().max(120, "Font body quá dài.")
 });
 
 const updateWebsiteSchema = baseWebsiteSchema.extend({
@@ -303,7 +315,15 @@ function parseCommonFormData(formData: FormData) {
     manualStatus: String(formData.get("manualStatus") ?? "ACTIVE"),
     startsAt: String(formData.get("startsAt") ?? ""),
     expiresAt: String(formData.get("expiresAt") ?? ""),
-    graceDays: String(formData.get("graceDays") ?? "0")
+    graceDays: String(formData.get("graceDays") ?? "0"),
+    themePreset: String(formData.get("themePreset") ?? ""),
+    themePrimaryColor: String(formData.get("themePrimaryColor") ?? ""),
+    themeSecondaryColor: String(formData.get("themeSecondaryColor") ?? ""),
+    themeAccentColor: String(formData.get("themeAccentColor") ?? ""),
+    themeBackgroundFrom: String(formData.get("themeBackgroundFrom") ?? ""),
+    themeBackgroundTo: String(formData.get("themeBackgroundTo") ?? ""),
+    themeHeadingFont: String(formData.get("themeHeadingFont") ?? ""),
+    themeBodyFont: String(formData.get("themeBodyFont") ?? "")
   };
 }
 
@@ -342,6 +362,16 @@ export async function createWebsiteAction(
       expiresAt: parsed.data.expiresAt,
       graceDays: parsed.data.graceDays
     });
+    const theme = normalizeTenantThemeInput({
+      preset: parsed.data.themePreset,
+      primaryColor: parsed.data.themePrimaryColor,
+      secondaryColor: parsed.data.themeSecondaryColor,
+      accentColor: parsed.data.themeAccentColor,
+      backgroundFrom: parsed.data.themeBackgroundFrom,
+      backgroundTo: parsed.data.themeBackgroundTo,
+      headingFont: parsed.data.themeHeadingFont,
+      bodyFont: parsed.data.themeBodyFont
+    });
 
     const conflictMessage = await ensureDomainConflicts(domains);
     if (conflictMessage) {
@@ -362,7 +392,8 @@ export async function createWebsiteAction(
 
     await Promise.all([
       syncTenantDomains(tenant.id, domains, parsed.data.isActive),
-      upsertTenantLifecycleByTenantId(tenant.id, lifecycle)
+      upsertTenantLifecycleByTenantId(tenant.id, lifecycle),
+      upsertTenantThemeByTenantId(tenant.id, theme)
     ]);
 
     revalidateWebsitePaths();
@@ -415,6 +446,16 @@ export async function updateWebsiteAction(
       expiresAt: parsed.data.expiresAt,
       graceDays: parsed.data.graceDays
     });
+    const theme = normalizeTenantThemeInput({
+      preset: parsed.data.themePreset,
+      primaryColor: parsed.data.themePrimaryColor,
+      secondaryColor: parsed.data.themeSecondaryColor,
+      accentColor: parsed.data.themeAccentColor,
+      backgroundFrom: parsed.data.themeBackgroundFrom,
+      backgroundTo: parsed.data.themeBackgroundTo,
+      headingFont: parsed.data.themeHeadingFont,
+      bodyFont: parsed.data.themeBodyFont
+    });
 
     const slug = await resolveUniqueTenantSlug(slugSeed, existing.id);
     const cmsDomain = normalizeCmsDomain(parsed.data.cmsDomain);
@@ -441,7 +482,8 @@ export async function updateWebsiteAction(
 
     await Promise.all([
       syncTenantDomains(existing.id, domains, parsed.data.isActive),
-      upsertTenantLifecycleByTenantId(existing.id, lifecycle)
+      upsertTenantLifecycleByTenantId(existing.id, lifecycle),
+      upsertTenantThemeByTenantId(existing.id, theme)
     ]);
 
     revalidateWebsitePaths();

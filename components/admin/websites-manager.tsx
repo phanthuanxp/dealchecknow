@@ -12,6 +12,14 @@ import { cn } from "@/lib/utils";
 
 type WebsiteEffectiveStatus = "active" | "paused" | "expired" | "not_found";
 type WebsiteManualStatus = "ACTIVE" | "PAUSED";
+type WebsiteThemePreset = "emerald-sky" | "ocean-blue" | "sunset-orange" | "slate-indigo";
+
+const THEME_PRESET_OPTIONS: Array<{ value: WebsiteThemePreset; label: string }> = [
+  { value: "emerald-sky", label: "Emerald Sky (mặc định)" },
+  { value: "ocean-blue", label: "Ocean Blue" },
+  { value: "sunset-orange", label: "Sunset Orange" },
+  { value: "slate-indigo", label: "Slate Indigo" }
+];
 
 export type AdminWebsiteItem = {
   id: string;
@@ -33,6 +41,16 @@ export type AdminWebsiteItem = {
     expiresAt: string;
     graceDays: number;
     effectiveStatus: WebsiteEffectiveStatus;
+  };
+  theme: {
+    preset: WebsiteThemePreset;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+    backgroundFrom: string;
+    backgroundTo: string;
+    headingFont: string;
+    bodyFont: string;
   };
   stats: {
     users: number;
@@ -113,6 +131,41 @@ function formatEffectiveStatus(status: WebsiteEffectiveStatus) {
     default:
       return { label: "Không xác định", className: "bg-slate-200 text-slate-700" };
   }
+}
+
+function ThemePreview({ item }: { item?: AdminWebsiteItem }) {
+  const primaryColor = item?.theme.primaryColor ?? "#0f766e";
+  const secondaryColor = item?.theme.secondaryColor ?? "#0284c7";
+  const backgroundFrom = item?.theme.backgroundFrom ?? "#ecfdf5";
+  const backgroundTo = item?.theme.backgroundTo ?? "#eff6ff";
+
+  return (
+    <div
+      className="rounded-lg border p-3"
+      style={{
+        borderColor: primaryColor,
+        background: `linear-gradient(135deg, ${backgroundFrom}, ${backgroundTo})`
+      }}
+    >
+      <p className="text-xs font-semibold" style={{ color: primaryColor }}>
+        Preview theme
+      </p>
+      <div className="mt-2 flex items-center gap-2">
+        <span
+          className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+          style={{ backgroundColor: primaryColor }}
+        >
+          Primary
+        </span>
+        <span
+          className="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+          style={{ backgroundColor: secondaryColor }}
+        >
+          Secondary
+        </span>
+      </div>
+    </div>
+  );
 }
 
 function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
@@ -221,6 +274,91 @@ function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
           />
         </label>
       </div>
+
+      <section className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <h4 className="text-sm font-semibold text-slate-800">Theme theo website</h4>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Preset theme</span>
+            <select
+              name="themePreset"
+              defaultValue={item?.theme.preset ?? "emerald-sky"}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+            >
+              {THEME_PRESET_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <ThemePreview item={item} />
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Màu chính</span>
+            <input name="themePrimaryColor" type="color" defaultValue={item?.theme.primaryColor ?? "#0f766e"} className="h-11 w-full rounded-lg border border-slate-300 p-1" />
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Màu phụ</span>
+            <input
+              name="themeSecondaryColor"
+              type="color"
+              defaultValue={item?.theme.secondaryColor ?? "#0284c7"}
+              className="h-11 w-full rounded-lg border border-slate-300 p-1"
+            />
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Màu nhấn</span>
+            <input name="themeAccentColor" type="color" defaultValue={item?.theme.accentColor ?? "#16a34a"} className="h-11 w-full rounded-lg border border-slate-300 p-1" />
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Nền từ</span>
+            <input
+              name="themeBackgroundFrom"
+              type="color"
+              defaultValue={item?.theme.backgroundFrom ?? "#ecfdf5"}
+              className="h-11 w-full rounded-lg border border-slate-300 p-1"
+            />
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Nền đến</span>
+            <input
+              name="themeBackgroundTo"
+              type="color"
+              defaultValue={item?.theme.backgroundTo ?? "#eff6ff"}
+              className="h-11 w-full rounded-lg border border-slate-300 p-1"
+            />
+          </label>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Font heading</span>
+            <input
+              name="themeHeadingFont"
+              defaultValue={item?.theme.headingFont ?? "\"Segoe UI\", Roboto, sans-serif"}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+            />
+          </label>
+
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Font body</span>
+            <input
+              name="themeBodyFont"
+              defaultValue={item?.theme.bodyFont ?? "\"Segoe UI\", Roboto, sans-serif"}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+            />
+          </label>
+        </div>
+      </section>
 
       <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
         <input

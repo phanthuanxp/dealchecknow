@@ -7,6 +7,7 @@ import { PublicHeader } from "@/components/public/header";
 import { MobileStickyBar } from "@/components/public/mobile-sticky-bar";
 import { TenantSiteUnavailable } from "@/components/public/tenant-site-unavailable";
 import { getCurrentTenantRuntimeState } from "@/lib/tenant-lifecycle";
+import { getCurrentTenantTheme, toTenantThemeCssVariables } from "@/lib/tenant-theme";
 
 type PublicLayoutProps = {
   children: ReactNode;
@@ -15,7 +16,7 @@ type PublicLayoutProps = {
 export const dynamic = "force-dynamic";
 
 export default async function PublicLayout({ children }: PublicLayoutProps) {
-  const runtimeState = await getCurrentTenantRuntimeState();
+  const [runtimeState, theme] = await Promise.all([getCurrentTenantRuntimeState(), getCurrentTenantTheme()]);
   const googleAdsTagId = "AW-11324459657";
   const canRenderPublic = runtimeState.status === "active" || runtimeState.status === "not_found";
 
@@ -23,8 +24,10 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
     return <TenantSiteUnavailable state={runtimeState} />;
   }
 
+  const themeVars = toTenantThemeCssVariables(theme);
+
   return (
-    <>
+    <div className="tenant-theme-shell" style={themeVars}>
       <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsTagId}`} strategy="afterInteractive" />
       <Script id="google-ads-gtag" strategy="afterInteractive">
         {`
@@ -39,6 +42,6 @@ export default async function PublicLayout({ children }: PublicLayoutProps) {
       <PublicFooter />
       <FloatingContact />
       <MobileStickyBar />
-    </>
+    </div>
   );
 }

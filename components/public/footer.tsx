@@ -46,23 +46,23 @@ export async function PublicFooter() {
           <p className="mt-3 text-sm text-slate-300">{footerContent.description}</p>
           <div className="mt-4 space-y-2 text-sm">
             <p className="inline-flex items-center gap-2">
-              <PhoneCallIcon className="h-4 w-4 text-emerald-300" />
+              <PhoneCallIcon className="theme-accent-text h-4 w-4" />
               Hotline:{" "}
-              <Link href={settings.hotlineTel} className="font-semibold text-emerald-300 hover:underline">
+              <Link href={settings.hotlineTel} className="theme-accent-text font-semibold hover:underline">
                 {settings.hotlineDisplay}
               </Link>
             </p>
             <p className="inline-flex items-center gap-2">
-              <ChatIcon className="h-4 w-4 text-sky-300" />
+              <ChatIcon className="h-4 w-4 text-slate-300" />
               Email:{" "}
-              <Link href={`mailto:${settings.email}`} className="font-semibold text-sky-300 hover:underline">
+              <Link href={`mailto:${settings.email}`} className="font-semibold text-slate-200 hover:underline">
                 {settings.email}
               </Link>
             </p>
             <p className="inline-flex items-center gap-2">
-              <MapPinIcon className="h-4 w-4 text-teal-300" />
+              <MapPinIcon className="h-4 w-4 text-slate-300" />
               Domain:{" "}
-              <Link href={settings.siteUrl} className="font-semibold text-teal-300 hover:underline">
+              <Link href={settings.siteUrl} className="font-semibold text-slate-200 hover:underline">
                 {settings.siteDomain}
               </Link>
             </p>

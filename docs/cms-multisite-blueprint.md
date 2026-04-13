@@ -54,6 +54,17 @@ Tài liệu này là chuẩn triển khai cho team dev tiếp theo để nâng c
 - Public layout đã chặn tenant bị `PAUSED/EXPIRED`, hiển thị trang thông báo vận hành.
 - Lifecycle lưu trong `SiteSetting` key `tenant_lifecycle` để tránh migration phá production.
 
+### Sprint 2 (đã triển khai giai đoạn 1)
+
+- Đã có theme per-tenant lưu SQL key `tenant_theme`.
+- AdminCP > Website đã có field:
+  - preset theme
+  - màu primary/secondary/accent
+  - màu nền from/to
+  - font heading/body
+- Public layout đã đọc theme theo domain và inject CSS variables runtime.
+- Header + CTA (floating/mobile) đã dùng token theme thay vì hardcode màu cố định.
+
 ## 4) Sprint tiếp theo cho team dev
 
 ## Sprint 2 - Theme per tenant

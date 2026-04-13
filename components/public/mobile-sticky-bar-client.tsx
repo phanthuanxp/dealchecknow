@@ -16,7 +16,7 @@ export function MobileStickyBarClient({ hotlineTel, zaloUrl }: MobileStickyBarCl
         <div className="mx-[5%] grid w-auto grid-cols-3 gap-2">
           <Link
             href={hotlineTel}
-            className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-emerald-600 px-2 text-xs font-semibold text-white"
+            className="theme-primary-btn inline-flex h-10 items-center justify-center gap-1 rounded-xl px-2 text-xs font-semibold"
           >
             <PhoneCallIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="leading-none">Gọi ngay</span>
@@ -26,7 +26,7 @@ export function MobileStickyBarClient({ hotlineTel, zaloUrl }: MobileStickyBarCl
             href={zaloUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-sky-600 px-2 text-xs font-semibold text-white"
+            className="theme-secondary-btn inline-flex h-10 items-center justify-center gap-1 rounded-xl px-2 text-xs font-semibold"
           >
             <ZaloIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="leading-none">Chat Zalo</span>
@@ -34,7 +34,7 @@ export function MobileStickyBarClient({ hotlineTel, zaloUrl }: MobileStickyBarCl
 
           <Link
             href="/#bao-gia"
-            className="inline-flex h-10 items-center justify-center gap-1 rounded-xl bg-indigo-600 px-2 text-xs font-semibold text-white"
+            className="theme-outline-btn inline-flex h-10 items-center justify-center gap-1 rounded-xl border px-2 text-xs font-semibold"
           >
             <CarIcon className="h-3.5 w-3.5 shrink-0" />
             <span className="leading-none">Đặt xe</span>

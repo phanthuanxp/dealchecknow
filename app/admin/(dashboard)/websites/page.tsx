@@ -8,6 +8,11 @@ import {
   lifecycleSettingKey,
   parseTenantLifecycleValue
 } from "@/lib/tenant-lifecycle";
+import {
+  defaultTenantTheme,
+  parseTenantThemeValue,
+  tenantThemeSettingKey
+} from "@/lib/tenant-theme";
 
 function toDateInputValue(value: string | null) {
   if (!value) {
@@ -48,25 +53,34 @@ async function getWebsiteAdminData(canManage: boolean) {
       }
     });
 
-    const lifecycleRows = await prisma.siteSetting.findMany({
+    const tenantSettingRows = await prisma.siteSetting.findMany({
       where: {
-        key: lifecycleSettingKey,
+        key: {
+          in: [lifecycleSettingKey, tenantThemeSettingKey]
+        },
         tenantId: {
           in: tenants.map((tenant) => tenant.id)
         }
       },
       select: {
+        key: true,
         tenantId: true,
         value: true
       }
     });
 
     const lifecycleMap = new Map<string, ReturnType<typeof parseTenantLifecycleValue>>();
-    for (const row of lifecycleRows) {
+    const themeMap = new Map<string, ReturnType<typeof parseTenantThemeValue>>();
+    for (const row of tenantSettingRows) {
       if (!row.tenantId) {
         continue;
       }
-      lifecycleMap.set(row.tenantId, parseTenantLifecycleValue(row.value));
+      if (row.key === lifecycleSettingKey) {
+        lifecycleMap.set(row.tenantId, parseTenantLifecycleValue(row.value));
+      }
+      if (row.key === tenantThemeSettingKey) {
+        themeMap.set(row.tenantId, parseTenantThemeValue(row.value));
+      }
     }
 
     const websites: AdminWebsiteItem[] = tenants.map((tenant) => {
@@ -81,6 +95,7 @@ async function getWebsiteAdminData(canManage: boolean) {
         expiresAt: null,
         graceDays: 0
       };
+      const theme = themeMap.get(tenant.id) ?? defaultTenantTheme;
       const effectiveStatus = evaluateTenantStatus(
         {
           isActive: tenant.isActive
@@ -108,6 +123,16 @@ async function getWebsiteAdminData(canManage: boolean) {
           expiresAt: toDateInputValue(lifecycle.expiresAt),
           graceDays: lifecycle.graceDays,
           effectiveStatus
+        },
+        theme: {
+          preset: theme.preset,
+          primaryColor: theme.primaryColor,
+          secondaryColor: theme.secondaryColor,
+          accentColor: theme.accentColor,
+          backgroundFrom: theme.backgroundFrom,
+          backgroundTo: theme.backgroundTo,
+          headingFont: theme.headingFont,
+          bodyFont: theme.bodyFont
         },
         stats: {
           users: tenant._count.users,
