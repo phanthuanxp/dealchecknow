@@ -21,6 +21,11 @@ export const adminNavItems: AdminNavItem[] = [
     description: "Phân loại bài viết"
   },
   {
+    label: "Website",
+    href: "/admincp/websites",
+    description: "Tạo và quản lý domain"
+  },
+  {
     label: "Yêu cầu báo giá",
     href: "/admincp/leads",
     description: "Quản lý khách liên hệ"
