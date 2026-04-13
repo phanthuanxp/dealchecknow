@@ -6,63 +6,68 @@ export type AdminNavItem = {
 
 export const adminNavItems: AdminNavItem[] = [
   {
-    label: "Tổng quan",
+    label: "Tong quan",
     href: "/admincp",
-    description: "Bảng điều khiển"
+    description: "Bang dieu khien"
   },
   {
-    label: "Bài viết",
+    label: "Bai viet",
     href: "/admincp/blog",
-    description: "Quản lý bài viết"
+    description: "Quan ly bai viet"
   },
   {
-    label: "Danh mục",
+    label: "Danh muc",
     href: "/admincp/categories",
-    description: "Phân loại bài viết"
+    description: "Phan loai bai viet"
   },
   {
     label: "Website",
     href: "/admincp/websites",
-    description: "Tạo và quản lý domain"
+    description: "Tao va quan ly domain"
   },
   {
-    label: "Yêu cầu báo giá",
+    label: "API Keys",
+    href: "/admincp/integrations",
+    description: "Quan ly ket noi API"
+  },
+  {
+    label: "Yeu cau bao gia",
     href: "/admincp/leads",
-    description: "Quản lý khách liên hệ"
+    description: "Quan ly khach lien he"
   },
   {
-    label: "Khối nội dung",
+    label: "Khoi noi dung",
     href: "/admincp/blocks",
-    description: "Nội dung trang chủ"
+    description: "Noi dung trang chu va page"
   },
   {
-    label: "Thư viện ảnh",
+    label: "Thu vien anh",
     href: "/admincp/media",
-    description: "Banner và ảnh dịch vụ"
+    description: "Banner va anh dich vu"
   },
   {
-    label: "Hỏi đáp",
+    label: "Hoi dap",
     href: "/admincp/faq",
-    description: "Câu hỏi thường gặp"
+    description: "Cau hoi thuong gap"
   },
   {
-    label: "Bảng giá",
+    label: "Bang gia",
     href: "/admincp/pricing",
-    description: "Tuyến và giá"
+    description: "Tuyen va gia"
   },
   {
-    label: "Dịch vụ SEO",
+    label: "Dich vu SEO",
     href: "/admincp/services",
-    description: "Trang dịch vụ động"
+    description: "Trang dich vu dong"
   },
   {
-    label: "Đánh giá",
+    label: "Danh gia",
     href: "/admincp/testimonials",
-    description: "Phản hồi khách hàng"
+    description: "Phan hoi khach hang"
   },
   {
-    label: "Cài đặt",
+    label: "Cai dat",
     href: "/admincp/settings",
-    description: "Thiết lập hệ thống"
+    description: "Thiet lap he thong"
   }
 ];
