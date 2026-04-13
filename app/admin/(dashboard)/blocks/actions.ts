@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import { getHomeBlockTemplate, getHomeSectionTemplate, type HomeBlockTemplate } from "@/lib/home-blocks";
+import { isBuilderSectionKey } from "@/lib/page-builder";
 import prisma from "@/lib/prisma";
 import { resolveTenantIdForSessionUser, whereByTenantId } from "@/lib/tenant";
 
@@ -22,7 +23,8 @@ const sectionKeySchema = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(/^home-[a-z0-9-]+$/, "Khóa section không hợp lệ.")
+  .regex(/^[a-z0-9]+-[a-z0-9-]+$/, "Khóa section không hợp lệ.")
+  .refine((value) => isBuilderSectionKey(value), "Section phải thuộc một trang hợp lệ.")
   .max(120, "Khóa section không hợp lệ.");
 
 const blockKeySchema = z
@@ -158,9 +160,15 @@ function parseRawJsonContent(contentJson: string): { content: Record<string, unk
   }
 }
 
-function revalidateHomeContent() {
+function revalidateBuilderContent() {
   revalidatePath("/", "layout");
   revalidatePath("/", "page");
+  revalidatePath("/gioi-thieu", "page");
+  revalidatePath("/dich-vu", "page");
+  revalidatePath("/bang-gia", "page");
+  revalidatePath("/blog", "page");
+  revalidatePath("/faq", "page");
+  revalidatePath("/lien-he", "page");
   revalidatePath("/admincp/blocks", "page");
 }
 
@@ -318,7 +326,7 @@ export async function saveLayoutOrderAction(
       }
     });
 
-    revalidateHomeContent();
+    revalidateBuilderContent();
     return successState("Đã lưu thứ tự bố cục landing page.");
   } catch {
     return errorState("Không thể lưu thứ tự bố cục. Vui lòng thử lại.");
@@ -360,7 +368,7 @@ export async function updateSectionAction(
       guard.tenantId
     );
 
-    revalidateHomeContent();
+    revalidateBuilderContent();
     return successState("Đã cập nhật mục nội dung thành công.");
   } catch {
     return errorState("Không thể cập nhật mục nội dung. Vui lòng thử lại.");
@@ -465,7 +473,7 @@ export async function updateBlockAction(
       }
     });
 
-    revalidateHomeContent();
+    revalidateBuilderContent();
     return successState("Đã cập nhật block thành công.");
   } catch {
     return errorState("Không thể cập nhật block. Vui lòng thử lại.");

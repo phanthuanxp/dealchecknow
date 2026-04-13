@@ -11,6 +11,7 @@ import {
   type BlocksActionState
 } from "@/app/admin/(dashboard)/blocks/actions";
 import { toSlug } from "@/lib/media";
+import type { BuilderPageConfig, BuilderPageKey } from "@/lib/page-builder";
 import { cn } from "@/lib/utils";
 import type { HomeBlockEditorField, HomeBlockEditorItem, HomeSectionEditorItem } from "@/lib/home-blocks";
 
@@ -26,6 +27,9 @@ type BlocksEditorProps = {
   sections: HomeSectionEditorItem[];
   mediaAssets: MediaAssetItem[];
   databaseReady: boolean;
+  builderPages: BuilderPageConfig[];
+  currentPageKey: BuilderPageKey;
+  previewPath: string;
 };
 
 type UploadStatus = "idle" | "success" | "error";
@@ -781,13 +785,21 @@ function SectionEditorCard({
   );
 }
 
-export function AdminBlocksEditor({ sections, mediaAssets, databaseReady }: BlocksEditorProps) {
+export function AdminBlocksEditor({
+  sections,
+  mediaAssets,
+  databaseReady,
+  builderPages,
+  currentPageKey,
+  previewPath
+}: BlocksEditorProps) {
   const [layoutState, layoutAction] = useActionState(saveLayoutOrderAction, INITIAL_BLOCKS_ACTION_STATE);
   const [editorSections, setEditorSections] = useState<HomeSectionEditorItem[]>(() => normalizeSortOrder(sections));
   const [layoutDirty, setLayoutDirty] = useState(false);
   const [dragSectionKey, setDragSectionKey] = useState<string | null>(null);
   const [dragBlock, setDragBlock] = useState<{ sectionKey: string; blockKey: string } | null>(null);
   const [previewVersion, setPreviewVersion] = useState(1);
+  const previewHref = `${previewPath}${previewPath.includes("?") ? "&" : "?"}preview=${previewVersion}`;
 
   const layoutJson = useMemo(
     () =>
@@ -847,6 +859,29 @@ export function AdminBlocksEditor({ sections, mediaAssets, databaseReady }: Bloc
 
   return (
     <div className="space-y-4">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold text-slate-900">Chon trang can chinh sua</h3>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {builderPages.map((page) => {
+            const active = page.key === currentPageKey;
+            return (
+              <Link
+                key={page.key}
+                href={`/admincp/blocks?page=${page.key}`}
+                className={cn(
+                  "inline-flex rounded-lg border px-3 py-2 text-xs font-semibold transition",
+                  active
+                    ? "border-teal-600 bg-teal-600 text-white"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                )}
+              >
+                {page.label}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
       {!databaseReady ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           Chưa cấu hình <code>DATABASE_URL</code>. Bạn vẫn xem được cấu trúc block nhưng chưa thể lưu thay đổi.
@@ -879,35 +914,42 @@ export function AdminBlocksEditor({ sections, mediaAssets, databaseReady }: Bloc
             </div>
           </div>
 
-          {editorSections.map((section) => (
-            <SectionEditorCard
-              key={section.key}
-              section={section}
-              disabled={!databaseReady}
-              mediaAssets={mediaAssets}
-              draggable
-              onDragStart={() => {
-                setDragSectionKey(section.key);
-                setDragBlock(null);
-              }}
-              onDrop={() => {
-                if (dragSectionKey) {
-                  applySectionReorder(dragSectionKey, section.key);
-                }
-                setDragSectionKey(null);
-              }}
-              onBlockDragStart={(blockKey) => {
-                setDragBlock({ sectionKey: section.key, blockKey });
-                setDragSectionKey(null);
-              }}
-              onBlockDrop={(targetBlockKey) => {
-                if (dragBlock && dragBlock.sectionKey === section.key) {
-                  applyBlockReorder(section.key, dragBlock.blockKey, targetBlockKey);
-                }
-                setDragBlock(null);
-              }}
-            />
-          ))}
+          {editorSections.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-sm text-slate-600">
+              Trang nay chua co section. Ban co the tao section/block moi theo page key trong SQL, sau do quay lai de
+              keo-tha.
+            </div>
+          ) : (
+            editorSections.map((section) => (
+              <SectionEditorCard
+                key={section.key}
+                section={section}
+                disabled={!databaseReady}
+                mediaAssets={mediaAssets}
+                draggable
+                onDragStart={() => {
+                  setDragSectionKey(section.key);
+                  setDragBlock(null);
+                }}
+                onDrop={() => {
+                  if (dragSectionKey) {
+                    applySectionReorder(dragSectionKey, section.key);
+                  }
+                  setDragSectionKey(null);
+                }}
+                onBlockDragStart={(blockKey) => {
+                  setDragBlock({ sectionKey: section.key, blockKey });
+                  setDragSectionKey(null);
+                }}
+                onBlockDrop={(targetBlockKey) => {
+                  if (dragBlock && dragBlock.sectionKey === section.key) {
+                    applyBlockReorder(section.key, dragBlock.blockKey, targetBlockKey);
+                  }
+                  setDragBlock(null);
+                }}
+              />
+            ))
+          )}
         </div>
 
         <div className="space-y-4">
@@ -915,21 +957,13 @@ export function AdminBlocksEditor({ sections, mediaAssets, databaseReady }: Bloc
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-slate-900">Preview landing page</h3>
-              <Link
-                href={`/?preview=${previewVersion}`}
-                target="_blank"
-                className="text-xs font-semibold text-teal-700 hover:underline"
-              >
+              <h3 className="text-sm font-semibold text-slate-900">Preview trang da chon</h3>
+              <Link href={previewHref} target="_blank" className="text-xs font-semibold text-teal-700 hover:underline">
                 Mở tab mới
               </Link>
             </div>
             <div className="overflow-hidden rounded-xl border border-slate-200">
-              <iframe
-                title="Landing Page Preview"
-                src={`/?preview=${previewVersion}`}
-                className="h-[70vh] w-full bg-white"
-              />
+              <iframe title="Landing Page Preview" src={previewHref} className="h-[70vh] w-full bg-white" />
             </div>
           </div>
         </div>

@@ -10,6 +10,11 @@ import {
   type HomeBlockFieldType,
   type HomeSectionEditorItem
 } from "@/lib/home-blocks";
+import {
+  BUILDER_PAGE_CONFIGS,
+  getBuilderPageConfig,
+  sectionBelongsToBuilderPage
+} from "@/lib/page-builder";
 import prisma from "@/lib/prisma";
 import { resolveTenantForCurrentRequest, whereByTenantId } from "@/lib/tenant";
 
@@ -38,6 +43,18 @@ type MediaAssetForEditor = {
   altText: string | null;
   groupKey: string;
 };
+
+type AdminBlocksPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function firstParamValue(input: string | string[] | undefined) {
+  if (Array.isArray(input)) {
+    return input[0] ?? "";
+  }
+
+  return input ?? "";
+}
 
 function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -175,16 +192,33 @@ function buildTemplateOnlySections(): HomeSectionEditorItem[] {
   }));
 }
 
-async function getEditorData(): Promise<{
+function buildCustomSections(sectionRows: DbSectionWithBlocks[]): HomeSectionEditorItem[] {
+  return sectionRows.map((section) => ({
+    key: section.key,
+    name: section.name,
+    type: section.type,
+    sortOrder: section.sortOrder,
+    title: section.title ?? section.name,
+    description: section.description ?? "",
+    isActive: section.isActive,
+    blocks: section.blocks.map((block) => buildRawBlockEditorData(block))
+  }));
+}
+
+async function getEditorData(pageKeyInput?: string): Promise<{
   sections: HomeSectionEditorItem[];
   mediaAssets: MediaAssetForEditor[];
   databaseReady: boolean;
+  currentPage: ReturnType<typeof getBuilderPageConfig>;
 }> {
+  const currentPage = getBuilderPageConfig(pageKeyInput);
+
   if (!process.env.DATABASE_URL) {
     return {
-      sections: buildTemplateOnlySections(),
+      sections: currentPage.key === "home" ? buildTemplateOnlySections() : [],
       mediaAssets: [],
-      databaseReady: false
+      databaseReady: false,
+      currentPage
     };
   }
 
@@ -197,7 +231,7 @@ async function getEditorData(): Promise<{
         where: {
           ...whereByTenantId(tenantId),
           key: {
-            startsWith: "home-"
+            startsWith: currentPage.sectionPrefix
           }
         },
         include: {
@@ -230,7 +264,7 @@ async function getEditorData(): Promise<{
             where: {
               tenantId: null,
               key: {
-                startsWith: "home-"
+                startsWith: currentPage.sectionPrefix
               }
             },
             include: {
@@ -256,9 +290,20 @@ async function getEditorData(): Promise<{
             }
           });
 
+    if (currentPage.key !== "home") {
+      return {
+        sections: buildCustomSections(sectionRows).sort((a, b) => a.sortOrder - b.sortOrder),
+        mediaAssets: assetRows,
+        databaseReady: true,
+        currentPage
+      };
+    }
+
     const dbSectionMap = new Map<string, DbSectionWithBlocks>();
     for (const section of sectionRows) {
-      dbSectionMap.set(section.key, section);
+      if (sectionBelongsToBuilderPage(section.key, "home")) {
+        dbSectionMap.set(section.key, section);
+      }
     }
 
     const templateSections: HomeSectionEditorItem[] = HOME_CONTENT_SECTION_TEMPLATES.map((sectionTemplate) => {
@@ -299,31 +344,42 @@ async function getEditorData(): Promise<{
     return {
       sections: [...templateSections, ...customSections].sort((a, b) => a.sortOrder - b.sortOrder),
       mediaAssets: assetRows,
-      databaseReady: true
+      databaseReady: true,
+      currentPage
     };
   } catch {
     return {
-      sections: buildTemplateOnlySections(),
+      sections: currentPage.key === "home" ? buildTemplateOnlySections() : [],
       mediaAssets: [],
-      databaseReady: false
+      databaseReady: false,
+      currentPage
     };
   }
 }
 
-export default async function AdminBlocksPage() {
-  const { sections, mediaAssets, databaseReady } = await getEditorData();
+export default async function AdminBlocksPage({ searchParams }: AdminBlocksPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const selectedPage = firstParamValue(resolvedSearchParams.page);
+  const { sections, mediaAssets, databaseReady, currentPage } = await getEditorData(selectedPage);
 
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Landing Editor trang chủ</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Landing Editor theo tung trang</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Kéo thả để đổi bố cục section và block, chỉnh nội dung trực tiếp, thay ảnh ngay trong từng block bằng cách
-          chọn từ thư viện hoặc upload trực tiếp. Sau khi lưu, trang công khai cập nhật ngay từ SQL.
+          Chon trang can sua, sau do keo tha section/block va cap nhat noi dung truc tiep. Du lieu luu trong SQL theo
+          tenant hien tai.
         </p>
       </section>
 
-      <AdminBlocksEditor sections={sections} mediaAssets={mediaAssets} databaseReady={databaseReady} />
+      <AdminBlocksEditor
+        sections={sections}
+        mediaAssets={mediaAssets}
+        databaseReady={databaseReady}
+        builderPages={BUILDER_PAGE_CONFIGS}
+        currentPageKey={currentPage.key}
+        previewPath={currentPage.previewPath}
+      />
     </div>
   );
 }
