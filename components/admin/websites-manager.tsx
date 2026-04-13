@@ -10,6 +10,9 @@ import {
 } from "@/app/admin/(dashboard)/websites/actions";
 import { cn } from "@/lib/utils";
 
+type WebsiteEffectiveStatus = "active" | "paused" | "expired" | "not_found";
+type WebsiteManualStatus = "ACTIVE" | "PAUSED";
+
 export type AdminWebsiteItem = {
   id: string;
   name: string;
@@ -24,6 +27,13 @@ export type AdminWebsiteItem = {
     isPrimary: boolean;
     isActive: boolean;
   }>;
+  lifecycle: {
+    manualStatus: WebsiteManualStatus;
+    startsAt: string;
+    expiresAt: string;
+    graceDays: number;
+    effectiveStatus: WebsiteEffectiveStatus;
+  };
   stats: {
     users: number;
     posts: number;
@@ -92,6 +102,19 @@ function ActionNotice({ state }: { state: WebsiteActionState }) {
   );
 }
 
+function formatEffectiveStatus(status: WebsiteEffectiveStatus) {
+  switch (status) {
+    case "active":
+      return { label: "Đang hoạt động", className: "bg-emerald-100 text-emerald-700" };
+    case "paused":
+      return { label: "Tạm dừng", className: "bg-amber-100 text-amber-700" };
+    case "expired":
+      return { label: "Hết hạn", className: "bg-rose-100 text-rose-700" };
+    default:
+      return { label: "Không xác định", className: "bg-slate-200 text-slate-700" };
+  }
+}
+
 function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
   return (
     <>
@@ -143,7 +166,7 @@ function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
       </div>
 
       <label className="text-sm">
-        <span className="mb-1 block font-medium text-slate-700">Domain phụ (mỗi dòng hoặc phân tách bằng dấu phẩy)</span>
+        <span className="mb-1 block font-medium text-slate-700">Domain phụ (mỗi dòng hoặc ngăn bằng dấu phẩy)</span>
         <textarea
           name="aliasDomainsText"
           rows={3}
@@ -153,6 +176,52 @@ function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
         />
       </label>
 
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Trạng thái thủ công</span>
+          <select
+            name="manualStatus"
+            defaultValue={item?.lifecycle.manualStatus ?? "ACTIVE"}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+          >
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="PAUSED">Tạm dừng</option>
+          </select>
+        </label>
+
+        <label className="text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Ngày bắt đầu</span>
+          <input
+            name="startsAt"
+            type="date"
+            defaultValue={item?.lifecycle.startsAt ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+          />
+        </label>
+
+        <label className="text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Ngày hết hạn</span>
+          <input
+            name="expiresAt"
+            type="date"
+            defaultValue={item?.lifecycle.expiresAt ?? ""}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+          />
+        </label>
+
+        <label className="text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Gia hạn ân hạn (ngày)</span>
+          <input
+            name="graceDays"
+            type="number"
+            min={0}
+            max={365}
+            defaultValue={item?.lifecycle.graceDays ?? 0}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+          />
+        </label>
+      </div>
+
       <label className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
         <input
           name="isActive"
@@ -160,7 +229,7 @@ function WebsiteFormFields({ item }: { item?: AdminWebsiteItem }) {
           defaultChecked={item?.isActive ?? true}
           className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
         />
-        Website đang hoạt động
+        Cho phép website truy cập public
       </label>
     </>
   );
@@ -178,6 +247,8 @@ function WebsiteEditCard({ item, databaseReady }: { item: AdminWebsiteItem; data
       collapseCard();
     }
   }, [updateState.status]);
+
+  const statusChip = formatEffectiveStatus(item.lifecycle.effectiveStatus);
 
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4">
@@ -201,13 +272,8 @@ function WebsiteEditCard({ item, databaseReady }: { item: AdminWebsiteItem; data
         </div>
 
         <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-              item.isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600"
-            )}
-          >
-            {item.isActive ? "Đang hoạt động" : "Đang tạm dừng"}
+          <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-semibold", statusChip.className)}>
+            {statusChip.label}
           </span>
           <ToggleButton expanded={expanded} onClick={() => setExpanded((prev) => !prev)} />
         </div>
@@ -265,7 +331,7 @@ function CreateWebsiteSection({ databaseReady }: { databaseReady: boolean }) {
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Tạo website mới</h2>
           <p className="mt-1 text-xs text-slate-600">
-            Tạo tenant mới để nhân bản web taxi cùng hệ thống CMS hiện tại.
+            Tạo tenant mới để vận hành thêm website taxi cùng hệ CMS trung tâm.
           </p>
         </div>
         <ToggleButton expanded={expanded} onClick={() => setExpanded((prev) => !prev)} />

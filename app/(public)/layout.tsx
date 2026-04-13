@@ -5,6 +5,8 @@ import { FloatingContact } from "@/components/public/floating-contact";
 import { PublicFooter } from "@/components/public/footer";
 import { PublicHeader } from "@/components/public/header";
 import { MobileStickyBar } from "@/components/public/mobile-sticky-bar";
+import { TenantSiteUnavailable } from "@/components/public/tenant-site-unavailable";
+import { getCurrentTenantRuntimeState } from "@/lib/tenant-lifecycle";
 
 type PublicLayoutProps = {
   children: ReactNode;
@@ -12,15 +14,18 @@ type PublicLayoutProps = {
 
 export const dynamic = "force-dynamic";
 
-export default function PublicLayout({ children }: PublicLayoutProps) {
+export default async function PublicLayout({ children }: PublicLayoutProps) {
+  const runtimeState = await getCurrentTenantRuntimeState();
   const googleAdsTagId = "AW-11324459657";
+  const canRenderPublic = runtimeState.status === "active" || runtimeState.status === "not_found";
+
+  if (!canRenderPublic) {
+    return <TenantSiteUnavailable state={runtimeState} />;
+  }
 
   return (
     <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsTagId}`}
-        strategy="afterInteractive"
-      />
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${googleAdsTagId}`} strategy="afterInteractive" />
       <Script id="google-ads-gtag" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];

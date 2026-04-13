@@ -6,6 +6,10 @@ import { z } from "zod";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import {
+  type TenantLifecycleConfig,
+  upsertTenantLifecycleByTenantId
+} from "@/lib/tenant-lifecycle";
 
 type ActionStatus = "idle" | "success" | "error";
 
@@ -14,13 +18,19 @@ export type WebsiteActionState = {
   message: string;
 };
 
+const lifecycleStatusSchema = z.enum(["ACTIVE", "PAUSED"]);
+
 const baseWebsiteSchema = z.object({
   name: z.string().trim().min(2, "Tên website phải có ít nhất 2 ký tự.").max(160, "Tên website quá dài."),
   slug: z.string().trim().max(120, "Slug quá dài."),
   cmsDomain: z.string().trim().max(255, "Domain CMS quá dài."),
   primaryDomain: z.string().trim().max(255, "Domain chính quá dài."),
   aliasDomainsText: z.string().trim().max(5000, "Danh sách domain phụ quá dài."),
-  isActive: z.boolean()
+  isActive: z.boolean(),
+  manualStatus: lifecycleStatusSchema,
+  startsAt: z.string().trim().max(40, "Ngày bắt đầu không hợp lệ."),
+  expiresAt: z.string().trim().max(40, "Ngày hết hạn không hợp lệ."),
+  graceDays: z.coerce.number().int().min(0, "Số ngày gia hạn phải >= 0.").max(365, "Số ngày gia hạn tối đa 365.")
 });
 
 const updateWebsiteSchema = baseWebsiteSchema.extend({
@@ -118,6 +128,56 @@ function normalizeCmsDomain(value: string) {
   }
 
   return normalized;
+}
+
+function parseDateInput(value: string, mode: "start" | "end") {
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    throw new Error("Ngày phải đúng định dạng YYYY-MM-DD.");
+  }
+
+  const [, year, month, day] = match;
+  const hours = mode === "start" ? 0 : 23;
+  const minutes = mode === "start" ? 0 : 59;
+  const seconds = mode === "start" ? 0 : 59;
+  const milliseconds = mode === "start" ? 0 : 999;
+
+  const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), hours, minutes, seconds, milliseconds));
+  if (Number.isNaN(utcDate.getTime())) {
+    throw new Error("Ngày không hợp lệ.");
+  }
+
+  return utcDate.toISOString();
+}
+
+function buildLifecycleConfig(input: {
+  manualStatus: "ACTIVE" | "PAUSED";
+  startsAt: string;
+  expiresAt: string;
+  graceDays: number;
+}): TenantLifecycleConfig {
+  const startsAt = parseDateInput(input.startsAt, "start");
+  const expiresAt = parseDateInput(input.expiresAt, "end");
+
+  if (startsAt && expiresAt) {
+    const startMs = new Date(startsAt).getTime();
+    const endMs = new Date(expiresAt).getTime();
+    if (startMs > endMs) {
+      throw new Error("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày hết hạn.");
+    }
+  }
+
+  return {
+    manualStatus: input.manualStatus,
+    startsAt,
+    expiresAt,
+    graceDays: input.graceDays
+  };
 }
 
 async function ensureAdminRole() {
@@ -232,6 +292,21 @@ function revalidateWebsitePaths() {
   revalidatePath("/admincp", "page");
 }
 
+function parseCommonFormData(formData: FormData) {
+  return {
+    name: String(formData.get("name") ?? ""),
+    slug: String(formData.get("slug") ?? ""),
+    cmsDomain: String(formData.get("cmsDomain") ?? ""),
+    primaryDomain: String(formData.get("primaryDomain") ?? ""),
+    aliasDomainsText: String(formData.get("aliasDomainsText") ?? ""),
+    isActive: formData.get("isActive") === "on",
+    manualStatus: String(formData.get("manualStatus") ?? "ACTIVE"),
+    startsAt: String(formData.get("startsAt") ?? ""),
+    expiresAt: String(formData.get("expiresAt") ?? ""),
+    graceDays: String(formData.get("graceDays") ?? "0")
+  };
+}
+
 export async function createWebsiteAction(
   _prev: WebsiteActionState,
   formData: FormData
@@ -245,15 +320,7 @@ export async function createWebsiteAction(
     return failure("Thiếu DATABASE_URL nên chưa thể tạo website.");
   }
 
-  const parsed = baseWebsiteSchema.safeParse({
-    name: String(formData.get("name") ?? ""),
-    slug: String(formData.get("slug") ?? ""),
-    cmsDomain: String(formData.get("cmsDomain") ?? ""),
-    primaryDomain: String(formData.get("primaryDomain") ?? ""),
-    aliasDomainsText: String(formData.get("aliasDomainsText") ?? ""),
-    isActive: formData.get("isActive") === "on"
-  });
-
+  const parsed = baseWebsiteSchema.safeParse(parseCommonFormData(formData));
   if (!parsed.success) {
     return failure(parsed.error.issues[0]?.message ?? "Dữ liệu website không hợp lệ.");
   }
@@ -269,6 +336,13 @@ export async function createWebsiteAction(
   }
 
   try {
+    const lifecycle = buildLifecycleConfig({
+      manualStatus: parsed.data.manualStatus,
+      startsAt: parsed.data.startsAt,
+      expiresAt: parsed.data.expiresAt,
+      graceDays: parsed.data.graceDays
+    });
+
     const conflictMessage = await ensureDomainConflicts(domains);
     if (conflictMessage) {
       return failure(conflictMessage);
@@ -286,7 +360,10 @@ export async function createWebsiteAction(
       }
     });
 
-    await syncTenantDomains(tenant.id, domains, parsed.data.isActive);
+    await Promise.all([
+      syncTenantDomains(tenant.id, domains, parsed.data.isActive),
+      upsertTenantLifecycleByTenantId(tenant.id, lifecycle)
+    ]);
 
     revalidateWebsitePaths();
     return success("Đã tạo website mới.");
@@ -309,13 +386,8 @@ export async function updateWebsiteAction(
   }
 
   const parsed = updateWebsiteSchema.safeParse({
-    id: String(formData.get("id") ?? ""),
-    name: String(formData.get("name") ?? ""),
-    slug: String(formData.get("slug") ?? ""),
-    cmsDomain: String(formData.get("cmsDomain") ?? ""),
-    primaryDomain: String(formData.get("primaryDomain") ?? ""),
-    aliasDomainsText: String(formData.get("aliasDomainsText") ?? ""),
-    isActive: formData.get("isActive") === "on"
+    ...parseCommonFormData(formData),
+    id: String(formData.get("id") ?? "")
   });
 
   if (!parsed.success) {
@@ -336,6 +408,13 @@ export async function updateWebsiteAction(
     if (!slugSeed) {
       return failure("Không thể tạo slug hợp lệ. Vui lòng nhập lại.");
     }
+
+    const lifecycle = buildLifecycleConfig({
+      manualStatus: parsed.data.manualStatus,
+      startsAt: parsed.data.startsAt,
+      expiresAt: parsed.data.expiresAt,
+      graceDays: parsed.data.graceDays
+    });
 
     const slug = await resolveUniqueTenantSlug(slugSeed, existing.id);
     const cmsDomain = normalizeCmsDomain(parsed.data.cmsDomain);
@@ -360,7 +439,10 @@ export async function updateWebsiteAction(
       }
     });
 
-    await syncTenantDomains(existing.id, domains, parsed.data.isActive);
+    await Promise.all([
+      syncTenantDomains(existing.id, domains, parsed.data.isActive),
+      upsertTenantLifecycleByTenantId(existing.id, lifecycle)
+    ]);
 
     revalidateWebsitePaths();
     return success("Đã cập nhật website.");
