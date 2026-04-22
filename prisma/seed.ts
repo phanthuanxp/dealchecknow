@@ -7,19 +7,6 @@ async function hashPassword(input: string) {
   return hash(input, 12);
 }
 
-function normalizeDomain(value: string | undefined | null) {
-  if (!value) {
-    return null;
-  }
-
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/\/+$/, "")
-    .replace(/^www\./, "");
-}
-
 async function seedDefaultTenant() {
   const slug =
     process.env.DEFAULT_TENANT_SLUG?.trim() || process.env.TENANT_SLUG?.trim() || "taxininhbinh";
@@ -37,29 +24,6 @@ async function seedDefaultTenant() {
       isActive: true
     }
   });
-
-  const configuredDomain = normalizeDomain(process.env.NEXT_PUBLIC_SITE_URL);
-  const domains = Array.from(
-    new Set([configuredDomain, "taxininhbinh.com", "www.taxininhbinh.com"].filter(Boolean))
-  ) as string[];
-
-  for (let index = 0; index < domains.length; index += 1) {
-    const domain = domains[index];
-    await prisma.tenantDomain.upsert({
-      where: { domain },
-      update: {
-        tenantId: tenant.id,
-        isPrimary: index === 0,
-        isActive: true
-      },
-      create: {
-        tenantId: tenant.id,
-        domain,
-        isPrimary: index === 0,
-        isActive: true
-      }
-    });
-  }
 
   return tenant;
 }

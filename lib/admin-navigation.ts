@@ -21,16 +21,6 @@ export const adminNavItems: AdminNavItem[] = [
     description: "Phan loai bai viet"
   },
   {
-    label: "Website",
-    href: "/admincp/websites",
-    description: "Tao va quan ly domain"
-  },
-  {
-    label: "API Keys",
-    href: "/admincp/integrations",
-    description: "Quan ly ket noi API"
-  },
-  {
     label: "Yeu cau bao gia",
     href: "/admincp/leads",
     description: "Quan ly khach lien he"

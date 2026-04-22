@@ -49,11 +49,9 @@ model Tenant {
   id              String           @id @default(cuid())
   slug            String           @unique
   name            String
-  cmsDomain       String?
   isActive        Boolean          @default(true)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
-  domains         TenantDomain[]
   users           User[]
   siteSections    SiteSection[]
   pageBlocks      PageBlock[]
@@ -69,20 +67,6 @@ model Tenant {
   servicePages    ServicePage[]
 
   @@index([isActive, slug])
-}
-
-model TenantDomain {
-  id        String   @id @default(cuid())
-  tenantId  String
-  domain    String   @unique
-  isPrimary Boolean  @default(false)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId, isPrimary])
-  @@index([tenantId, isActive])
 }
 
 model User {

@@ -121,7 +121,7 @@ export async function POST(request: Request) {
         pickupLocation: data.pickupLocation,
         dropoffLocation: data.dropoffLocation,
         pickupTime,
-        vehicleType: data.tripType,
+        vehicleType: data.vehicleType,
         estimatedPrice: typeof estimatedPriceNumber === "number" ? estimatedPriceNumber : undefined,
         message: buildLeadNote({
           tripType: data.tripType,

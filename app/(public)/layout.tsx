@@ -5,8 +5,6 @@ import { FloatingContact } from "@/components/public/floating-contact";
 import { PublicFooter } from "@/components/public/footer";
 import { PublicHeader } from "@/components/public/header";
 import { MobileStickyBar } from "@/components/public/mobile-sticky-bar";
-import { TenantSiteUnavailable } from "@/components/public/tenant-site-unavailable";
-import { getCurrentTenantRuntimeState } from "@/lib/tenant-lifecycle";
 import { getCurrentTenantTheme, toTenantThemeCssVariables } from "@/lib/tenant-theme";
 
 type PublicLayoutProps = {
@@ -16,13 +14,8 @@ type PublicLayoutProps = {
 export const dynamic = "force-dynamic";
 
 export default async function PublicLayout({ children }: PublicLayoutProps) {
-  const [runtimeState, theme] = await Promise.all([getCurrentTenantRuntimeState(), getCurrentTenantTheme()]);
-  const googleAdsTagId = "AW-11324459657";
-  const canRenderPublic = runtimeState.status === "active" || runtimeState.status === "not_found";
-
-  if (!canRenderPublic) {
-    return <TenantSiteUnavailable state={runtimeState} />;
-  }
+  const theme = await getCurrentTenantTheme();
+  const googleAdsTagId = "AW-17114199948";
 
   const themeVars = toTenantThemeCssVariables(theme);
 

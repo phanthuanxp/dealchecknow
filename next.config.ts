@@ -29,6 +29,16 @@ const nextConfig: NextConfig = {
         destination: "/admincp/:path*",
         permanent: false
       },
+      {
+        source: "/admincp/websites/:path*",
+        destination: "/admincp/settings",
+        permanent: false
+      },
+      {
+        source: "/admincp/integrations/:path*",
+        destination: "/admincp/settings",
+        permanent: false
+      },
 
       // SEO-safe permanent redirects for legacy service URLs.
       // Additional legacy slugs are handled in app/(public)/dich-vu/[legacySlug]/page.tsx

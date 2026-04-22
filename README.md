@@ -1,8 +1,8 @@
-# Taxi Ninh Bình
+# Taxi Ninh Binh
 
-Website production-ready cho dịch vụ taxi và xe du lịch Ninh Bình (`https://taxininhbinh.com`).
+Website production-ready cho dich vu taxi va xe du lich Ninh Binh (`https://taxininhbinh.com`).
 
-## Công nghệ sử dụng
+## Cong nghe su dung
 
 - Next.js App Router + TypeScript
 - Tailwind CSS
@@ -10,7 +10,7 @@ Website production-ready cho dịch vụ taxi và xe du lịch Ninh Bình (`http
 - PostgreSQL
 - Auth.js (NextAuth credentials) cho AdminCP
 
-## Cấu trúc thư mục chính
+## Cau truc thu muc chinh
 
 ```text
 app/
@@ -19,21 +19,21 @@ lib/
 prisma/
 ```
 
-## 1) Cài dependency
+## 1) Cai dependency
 
 ```bash
 npm install
 ```
 
-## 2) Cấu hình biến môi trường
+## 2) Cau hinh bien moi truong
 
-Sao chép file mẫu:
+Sao chep file mau:
 
 ```bash
 cp .env.example .env
 ```
 
-Giá trị cần có trong `.env`:
+Gia tri can co trong `.env`:
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/taxininhbinh?schema=public"
@@ -41,13 +41,8 @@ AUTH_SECRET="replace_with_a_long_random_secret"
 NEXT_PUBLIC_SITE_URL="https://taxininhbinh.com"
 TELEGRAM_BOT_TOKEN="replace_with_telegram_bot_token"
 TELEGRAM_CHAT_ID="replace_with_telegram_chat_id"
+BLOB_READ_WRITE_TOKEN="replace_with_vercel_blob_read_write_token"
 ```
-
-Ghi chú:
-
-- `DATABASE_URL`: bắt buộc.
-- `AUTH_SECRET`: bắt buộc cho đăng nhập AdminCP.
-- `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`: cần để nhận lead qua Telegram.
 
 ## 3) Generate Prisma Client
 
@@ -57,7 +52,7 @@ npm run prisma:generate
 
 ## 4) Migrate database
 
-Khi phát triển local:
+Khi phat trien local:
 
 ```bash
 npm run prisma:migrate -- --name init
@@ -69,119 +64,83 @@ Khi deploy production:
 npm run prisma:migrate:deploy
 ```
 
-## 5) Seed dữ liệu ban đầu
+Neu da chuyen sang che do single-site va muon don bang CMS cu:
+
+```sql
+-- Run script: prisma/manual-single-site-cleanup.sql
+```
+
+## 5) Seed du lieu ban dau
 
 ```bash
 npm run prisma:seed
 ```
 
-Seed sẽ tạo:
+Seed tao du lieu khoi tao cho:
 
-- User admin mặc định.
-- Dữ liệu khởi tạo cho block trang chủ, bảng giá, FAQ, testimonial, blog category/blog post, site settings.
+- Tai khoan admin mac dinh
+- Block trang chu
+- Bang gia, FAQ, testimonial
+- Blog category/blog post
+- Site settings
 
-## 6) Tạo admin ban đầu
-
-Sau khi chạy seed, tài khoản mặc định:
+## 6) Tai khoan AdminCP mac dinh
 
 - Email: `admin@taxininhbinh.com`
 - Password: `Admin@123456`
 - Role: `ADMIN`
 
-Nếu chạy mô hình CMS đa domain (giai đoạn 1), dùng thêm script provision:
+Sau khi dang nhap lan dau, nen doi mat khau ngay.
 
-```bash
-# Linux/macOS
-BOOTSTRAP_ADMINTRIP_PASSWORD="your_password_1" \
-BOOTSTRAP_QUANLYCP_PASSWORD="your_password_2" \
-npm run prisma:provision:stage1
-```
-
-```powershell
-# Windows PowerShell
-$env:BOOTSTRAP_ADMINTRIP_PASSWORD="your_password_1"
-$env:BOOTSTRAP_QUANLYCP_PASSWORD="your_password_2"
-npm run prisma:provision:stage1
-```
-
-Script này sẽ:
-
-- Upsert tenant/domain cho phase 1 (`taxininhbinh.com`, `taxigiabinh.vn`, `taxitamdao.com`, `taxibacninh.vn`).
-- Upsert 2 tài khoản admin:
-  - `info@30nice.vn`
-  - `phamvanthuanjp@gmail.com`
-
-Khuyến nghị production:
-
-1. Đăng nhập AdminCP bằng tài khoản seed.
-2. Đổi mật khẩu ngay (hoặc cập nhật `passwordHash` bằng Prisma Studio/SQL theo quy trình nội bộ).
-
-## 7) Chạy local
+## 7) Chay local
 
 ```bash
 npm run dev
 ```
 
-Truy cập:
-
 - Public site: [http://localhost:3000](http://localhost:3000)
 - Admin login: [http://localhost:3000/admincp/login](http://localhost:3000/admincp/login)
 
-## 8) Deploy lên Vercel
+## 8) Deploy len Vercel
 
-1. Push code lên GitHub.
-2. Import project vào Vercel.
-3. Cấu hình đầy đủ env trên Vercel:
+1. Push code len GitHub.
+2. Import project vao Vercel.
+3. Cau hinh env tren Vercel:
    - `DATABASE_URL`
    - `AUTH_SECRET`
    - `NEXT_PUBLIC_SITE_URL`
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
+   - `BLOB_READ_WRITE_TOKEN`
 4. Deploy.
-5. Chạy migrate production:
-   - qua CI/CD hoặc chạy `npm run prisma:migrate:deploy` trong môi trường production.
+5. Chay migrate production (`npm run prisma:migrate:deploy`).
 
-## 9) PostgreSQL ngoài để không mất dữ liệu khi redeploy
+## 9) PostgreSQL ngoai de khong mat du lieu khi redeploy
 
-Không dùng SQLite/local file cho production.
+Khuyen nghi dung PostgreSQL managed (Neon, Supabase, Railway, RDS...):
 
-Khuyến nghị dùng PostgreSQL managed (Neon, Supabase, Railway Postgres, RDS...):
+1. Tao database.
+2. Gan connection string vao `DATABASE_URL` tren Vercel.
+3. Chay `prisma migrate deploy`.
+4. Chay `npm run prisma:seed` lan dau neu can.
 
-1. Tạo database PostgreSQL ngoài.
-2. Lấy connection string và gán vào `DATABASE_URL` trên Vercel.
-3. Chạy `prisma migrate deploy`.
-4. (Tuỳ chọn) chạy `prisma:seed` lần đầu để có dữ liệu mặc định.
+## 10) Telegram lead notifications
 
-Với cách này, dữ liệu không bị mất khi redeploy.
+Khi co lead moi tu form bao gia:
 
-## 10) Cấu hình Telegram bot
+- Lead luon duoc luu SQL truoc.
+- Telegram gui sau.
+- Neu Telegram loi, lead van duoc giu trong DB.
 
-1. Tạo bot qua BotFather để lấy `TELEGRAM_BOT_TOKEN`.
-2. Lấy `TELEGRAM_CHAT_ID` của group/user nhận thông báo.
-3. Set 2 env này trên local + Vercel.
-4. Khi có lead mới từ form báo giá:
-   - Lead luôn lưu vào SQL trước.
-   - Telegram gửi sau; nếu gửi lỗi thì lead vẫn được giữ trong DB.
+## 11) Chinh hotline/email/Zalo/site settings trong AdminCP
 
-## 11) Chỉnh hotline/email/Zalo/site settings trong AdminCP
+Vao `/admincp/settings` de cap nhat:
 
-Vào:
-
-- `/admin/settings`
-
-Có thể chỉnh:
-
-- Tên website
+- Ten website
 - Domain
 - Tagline
-- Hotline chuẩn + hotline hiển thị
+- Hotline (hien thi + tel)
 - Email
-- Số Zalo
+- So Zalo
 
-Public site đọc các giá trị này từ SQL (`SiteSetting`), không hardcode ở phần vận hành chính.
-
-## Ghi chú kỹ thuật
-
-- Form báo giá API: `POST /api/quote`.
-- Hệ thống validate cả client và server.
-- Các nội dung editable quan trọng được lưu PostgreSQL qua Prisma.
+Public site doc cac gia tri nay tu SQL (`SiteSetting`), khong hardcode o van hanh chinh.
