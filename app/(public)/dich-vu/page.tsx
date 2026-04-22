@@ -118,7 +118,7 @@ export default async function ServicesPage() {
               href={service.href}
               className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-teal-700 hover:underline"
             >
-              Xem dịch vụ {service.keyword}
+              {service.title}
             </Link>
           ))}
           <Link

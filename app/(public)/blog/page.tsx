@@ -60,6 +60,7 @@ export default async function BlogListingPage() {
           alt="Blog chia sẻ kinh nghiệm đặt taxi và du lịch Ninh Bình"
           width={1200}
           height={630}
+          sizes="(max-width: 640px) 90vw, 1200px"
           className="mt-5 h-48 w-full rounded-2xl border border-teal-100 object-cover sm:h-64"
           priority
         />
@@ -73,23 +74,15 @@ export default async function BlogListingPage() {
         <section className="mt-6 grid gap-4 sm:grid-cols-2">
           {posts.map((post) => (
             <article key={post.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div
-                className="h-48 w-full bg-gradient-to-br from-teal-100 to-sky-100"
-                style={
-                  post.coverImageUrl
-                    ? {
-                        backgroundImage: `url(${post.coverImageUrl})`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center"
-                      }
-                    : {
-                        backgroundImage: "url('/images/services/service-tour.jpg')",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center"
-                      }
-                }
-                aria-label={post.title}
-              />
+              <div className="relative h-48 w-full bg-gradient-to-br from-teal-100 to-sky-100">
+                <Image
+                  src={post.coverImageUrl || "/images/services/service-tour.jpg"}
+                  alt={post.title}
+                  fill
+                  sizes="(max-width: 640px) 90vw, 45vw"
+                  className="object-cover"
+                />
+              </div>
               <div className="p-5">
                 <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-teal-700">
                   <ChatIcon className="h-3.5 w-3.5" />

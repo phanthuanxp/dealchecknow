@@ -1,6 +1,6 @@
 import { notFound, permanentRedirect } from "next/navigation";
 
-import { getPublishedServiceBySlug } from "@/lib/services";
+import { getPublishedServiceBySlug, resolveServiceCanonicalPath } from "@/lib/services";
 
 type LegacyServicePageProps = {
   params: Promise<{ legacySlug: string }>;
@@ -14,5 +14,5 @@ export default async function LegacyServiceRedirectPage({ params }: LegacyServic
     notFound();
   }
 
-  permanentRedirect(`/${service.slug}`);
+  permanentRedirect(resolveServiceCanonicalPath(service));
 }

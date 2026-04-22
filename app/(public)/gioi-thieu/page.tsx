@@ -120,15 +120,23 @@ export default async function AboutPage() {
           </ul>
 
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Bản đồ khu vực phục vụ (placeholder)</h3>
+            <h3 className="text-sm font-semibold text-slate-900">Bản đồ khu vực phục vụ</h3>
             <p className="mt-2 text-sm text-slate-600">
-              Vị trí hiển thị Google Map nhúng để khách xem nhanh khu vực phục vụ trọng điểm tại Ninh Bình.
+              Theo dõi nhanh vùng phục vụ trọng điểm tại Ninh Bình để chọn điểm đón/trả phù hợp trước khi đặt xe.
             </p>
+            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <iframe
+                title="Bản đồ khu vực phục vụ Taxi Ninh Bình"
+                src="https://www.google.com/maps?q=Ninh%20Binh%20Vietnam&output=embed"
+                loading="lazy"
+                className="h-52 w-full"
+              />
+            </div>
           </div>
         </article>
 
         <article className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Bộ ảnh phương tiện và dịch vụ (placeholder)</h2>
+          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">Bộ ảnh phương tiện và dịch vụ thực tế</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Image
               src="/images/services/service-ha-noi.webp"

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { CarIcon, CheckCircleIcon, resolveUiIcon } from "@/components/public/ui-icons";
@@ -49,11 +50,12 @@ export function ServicesSection({ data }: ServicesSectionProps) {
 
           return (
             <article key={item.title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={imageUrl}
                 alt={`Hình xe dịch vụ: ${item.title}`}
-                loading="lazy"
+                width={640}
+                height={360}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 30vw"
                 className="h-32 w-full rounded-lg border border-slate-200 object-cover sm:h-36"
               />
               <h3 className="mt-3 text-sm font-semibold text-slate-900 sm:text-base">{item.title}</h3>

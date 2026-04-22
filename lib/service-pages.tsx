@@ -9,10 +9,18 @@ function toKeyword(slug: string) {
   return slug.replace(/-/g, " ");
 }
 
-function buildKeywords(slug: string) {
-  const keyword = toKeyword(slug);
+function buildKeywords(service: { slug: string; title: string }) {
+  const keyword = toKeyword(service.slug);
+  const routeTitle = service.title.toLowerCase();
 
-  return [keyword, `dịch vụ ${keyword}`, `đặt xe ${keyword}`, "taxi ninh bình", "bảng giá taxi ninh bình"];
+  return [
+    keyword,
+    routeTitle,
+    `dịch vụ ${keyword}`,
+    `đặt xe ${keyword}`,
+    "taxi ninh bình",
+    "bảng giá taxi ninh bình"
+  ];
 }
 
 export async function buildServiceMetadataBySlug(requestSlug: string): Promise<Metadata> {
@@ -31,7 +39,10 @@ export async function buildServiceMetadataBySlug(requestSlug: string): Promise<M
   const canonicalPath = resolveServiceCanonicalPath(service);
   const canonical = canonicalPath.startsWith("http") ? canonicalPath : `${seo.siteUrl}${canonicalPath}`;
   const title = service.metaTitle?.trim() || service.title;
-  const description = service.metaDescription?.trim() || service.shortDescription;
+  const description =
+    service.metaDescription?.trim() ||
+    service.shortDescription?.trim() ||
+    `Dịch vụ ${toKeyword(service.slug)} xe riêng, hỗ trợ 24/7 tại Taxi Ninh Bình.`;
   const imageUrl = service.featuredImage
     ? service.featuredImage.startsWith("http")
       ? service.featuredImage
@@ -41,7 +52,7 @@ export async function buildServiceMetadataBySlug(requestSlug: string): Promise<M
   return {
     title,
     description,
-    keywords: buildKeywords(service.slug),
+    keywords: buildKeywords(service),
     alternates: {
       canonical
     },
@@ -69,7 +80,14 @@ export async function renderServicePageBySlug(requestSlug: string) {
     notFound();
   }
 
-  if (service.slug !== requestSlug) {
+  const canonicalPath = resolveServiceCanonicalPath(service);
+  const canonicalSlug = canonicalPath.startsWith("/") ? canonicalPath.replace(/^\/+/, "").split("/")[0] : "";
+
+  if (canonicalSlug && canonicalSlug !== requestSlug) {
+    permanentRedirect(canonicalPath);
+  }
+
+  if (!canonicalSlug && service.slug !== requestSlug) {
     permanentRedirect(`/${service.slug}`);
   }
 

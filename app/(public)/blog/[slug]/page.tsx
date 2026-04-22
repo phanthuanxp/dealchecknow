@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -215,23 +216,16 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 
         {post.excerpt ? <p className="mt-4 text-sm text-slate-700 sm:text-base">{post.excerpt}</p> : null}
 
-        <div
-          className="mt-5 h-52 w-full rounded-xl bg-gradient-to-br from-teal-100 to-sky-100 sm:h-72"
-          style={
-            post.coverImageUrl
-              ? {
-                  backgroundImage: `url(${post.coverImageUrl})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center"
-                }
-              : {
-                  backgroundImage: "url('/images/cover-service-overview.svg')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center"
-                }
-          }
-          aria-label={post.title}
-        />
+        <div className="relative mt-5 h-52 w-full overflow-hidden rounded-xl bg-gradient-to-br from-teal-100 to-sky-100 sm:h-72">
+          <Image
+            src={post.coverImageUrl || "/images/cover-service-overview.svg"}
+            alt={post.title}
+            fill
+            sizes="(max-width: 768px) 92vw, 1024px"
+            className="object-cover"
+            priority
+          />
+        </div>
 
         <div className="prose prose-slate mt-6 max-w-none text-sm leading-7 sm:text-base">
           {contentBlocks.map((block, index) => {
@@ -282,12 +276,13 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             {relatedPosts.map((related) => (
               <article key={related.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={related.coverImageUrl || "/images/cover-about.svg"}
                   alt={related.title}
+                  width={480}
+                  height={192}
+                  sizes="(max-width: 640px) 100vw, 30vw"
                   className="h-20 w-full rounded-lg border border-slate-200 object-cover"
-                  loading="lazy"
                 />
                 <p className="mt-2 text-xs font-semibold uppercase text-teal-700">{related.category.name}</p>
                 <h3 className="mt-1 text-sm font-semibold text-slate-900">{related.title}</h3>
@@ -306,6 +301,23 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         <p className="mt-2 text-sm text-slate-700">
           Liên hệ ngay để được tư vấn tuyến phù hợp: taxi Ninh Bình đi Hà Nội, đi sân bay Nội Bài hoặc thuê xe du lịch theo lịch trình riêng.
         </p>
+        <div className="mt-3 grid gap-2 text-xs sm:grid-cols-2 md:grid-cols-3">
+          <Link href="/taxi-ha-noi-ninh-binh" className="rounded-lg border border-teal-200 bg-white px-3 py-1.5 font-semibold text-teal-700 hover:underline">
+            taxi hà nội ninh bình
+          </Link>
+          <Link href="/taxi-noi-bai-ninh-binh" className="rounded-lg border border-teal-200 bg-white px-3 py-1.5 font-semibold text-teal-700 hover:underline">
+            taxi nội bài ninh bình
+          </Link>
+          <Link href="/taxi-ninh-binh-ha-noi" className="rounded-lg border border-teal-200 bg-white px-3 py-1.5 font-semibold text-teal-700 hover:underline">
+            taxi ninh bình hà nội
+          </Link>
+          <Link href="/taxi-ninh-binh-noi-bai" className="rounded-lg border border-teal-200 bg-white px-3 py-1.5 font-semibold text-teal-700 hover:underline">
+            taxi ninh bình nội bài
+          </Link>
+          <Link href="/bang-gia" className="rounded-lg border border-teal-200 bg-white px-3 py-1.5 font-semibold text-teal-700 hover:underline">
+            bảng giá taxi ninh bình
+          </Link>
+        </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Link
             href={settings.hotlineTel}

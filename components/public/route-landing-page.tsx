@@ -20,6 +20,7 @@ import {
   createBreadcrumbSchema,
   createFaqPageSchema,
   createLocalBusinessSchema,
+  createOrganizationSchema,
   getSeoContext
 } from "@/lib/seo";
 import { getPublicSiteSettings } from "@/lib/site-settings";
@@ -219,6 +220,7 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
   );
 
   const localBusinessSchema = createLocalBusinessSchema(seo);
+  const organizationSchema = createOrganizationSchema(seo);
   const taxiServiceSchema = {
     "@context": "https://schema.org",
     "@type": "TaxiService",
@@ -251,6 +253,7 @@ export async function RouteLandingPage({ service, relatedServices }: RouteLandin
 
   return (
     <div className="mx-auto w-[90%] py-6 sm:py-8">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />

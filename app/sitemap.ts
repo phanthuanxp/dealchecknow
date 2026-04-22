@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getPublishedBlogPosts } from "@/lib/blog-queries";
 import { getBaseSiteUrl } from "@/lib/seo";
-import { getServiceSlugsForSitemap } from "@/lib/services";
+import { getServicePathsForSitemap } from "@/lib/services";
 
 const staticPaths = [
   "/",
@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "/" ? 1 : 0.7
   }));
 
-  const [posts, serviceSlugs] = await Promise.all([getPublishedBlogPosts(), getServiceSlugsForSitemap()]);
+  const [posts, servicePaths] = await Promise.all([getPublishedBlogPosts(), getServicePathsForSitemap()]);
   const blogEntries: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${siteUrl}/blog/${post.slug}`,
     lastModified: new Date(post.publishedAt ?? post.createdAt),
@@ -37,8 +37,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6
   }));
 
-  const serviceEntries: MetadataRoute.Sitemap = serviceSlugs.map((item) => ({
-    url: `${siteUrl}/${item.slug}`,
+  const serviceEntries: MetadataRoute.Sitemap = servicePaths.map((item) => ({
+    url: `${siteUrl}${item.path}`,
     lastModified: new Date(item.updatedAt),
     changeFrequency: "weekly",
     priority: 0.8

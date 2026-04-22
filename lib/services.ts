@@ -277,6 +277,8 @@ export function resolveServiceCanonicalPath(service: Pick<PublicServicePage, "sl
 }
 
 function toListItem(service: PublicServicePage): ServiceListItem {
+  const canonicalPath = resolveServiceCanonicalPath(service);
+
   return {
     id: service.id,
     slug: service.slug,
@@ -286,8 +288,8 @@ function toListItem(service: PublicServicePage): ServiceListItem {
     sortOrder: service.sortOrder,
     isPublished: service.isPublished,
     keyword: service.slug.replace(/-/g, " "),
-    href: `/${service.slug}`,
-    canonicalPath: resolveServiceCanonicalPath(service),
+    href: canonicalPath,
+    canonicalPath,
     updatedAt: service.updatedAt
   };
 }
@@ -487,6 +489,27 @@ export async function getServiceSlugsForSitemap(): Promise<Array<{ slug: string;
       updatedAt: service.updatedAt
     }));
   }
+}
+
+export async function getServicePathsForSitemap(): Promise<Array<{ path: string; updatedAt: Date }>> {
+  const services = await getPublishedServices();
+  const dedup = new Map<string, Date>();
+
+  for (const service of services) {
+    const path = resolveServiceCanonicalPath(service);
+    if (!path.startsWith("/")) {
+      continue;
+    }
+
+    const existing = dedup.get(path);
+    if (!existing || existing.getTime() < service.updatedAt.getTime()) {
+      dedup.set(path, service.updatedAt);
+    }
+  }
+
+  return [...dedup.entries()]
+    .map(([path, updatedAt]) => ({ path, updatedAt }))
+    .sort((a, b) => a.path.localeCompare(b.path));
 }
 
 export function createServiceSlug(input: string) {

@@ -135,8 +135,18 @@ export default async function ContactPage() {
           </ul>
 
           <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <h3 className="text-sm font-semibold text-slate-900">Google Map khu vực phục vụ (placeholder)</h3>
-            <p className="mt-2 text-sm text-slate-600">Vị trí dành cho bản đồ nhúng để khách kiểm tra khu vực đón/trả xe nhanh hơn.</p>
+            <h3 className="text-sm font-semibold text-slate-900">Bản đồ khu vực phục vụ</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              Xem nhanh vị trí trung tâm Ninh Bình để ước lượng thời gian đón và chọn điểm hẹn thuận tiện.
+            </p>
+            <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <iframe
+                title="Bản đồ liên hệ Taxi Ninh Bình"
+                src="https://www.google.com/maps?q=Ninh%20Binh%20Vietnam&output=embed"
+                loading="lazy"
+                className="h-52 w-full"
+              />
+            </div>
           </div>
         </article>
       </section>
