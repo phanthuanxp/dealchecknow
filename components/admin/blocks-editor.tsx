@@ -227,7 +227,7 @@ function MediaAssetPanel({ mediaAssets }: { mediaAssets: MediaAssetItem[] }) {
     <div className="rounded-2xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-slate-900">Thư viện ảnh nhanh</h3>
       <p className="mt-1 text-xs text-slate-500">
-        Bạn có thể chọn trực tiếp từ field trong block hoặc copy URL tại đây.
+        Bạn có thể chọn trực tiếp từ trường trong block hoặc sao chép URL tại đây.
       </p>
 
       <div className="mt-3 space-y-4">
@@ -247,7 +247,7 @@ function MediaAssetPanel({ mediaAssets }: { mediaAssets: MediaAssetItem[] }) {
                     onClick={() => copyUrl(asset.url)}
                     className="mt-2 inline-flex rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-white"
                   >
-                    {copied === asset.url ? "Đã copy" : "Copy URL"}
+                    {copied === asset.url ? "Đã sao chép" : "Sao chép URL"}
                   </button>
                 </article>
               ))}
@@ -337,7 +337,7 @@ function MediaUploadControl({
 
   return (
     <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-      <p className="text-xs font-semibold text-slate-700">Upload ảnh nhanh cho field này</p>
+      <p className="text-xs font-semibold text-slate-700">Tải ảnh nhanh cho trường này</p>
       <div className="flex flex-wrap items-center gap-2">
         <input
           type="file"
@@ -358,7 +358,7 @@ function MediaUploadControl({
             disabled || isUploading ? "cursor-not-allowed bg-slate-400" : "bg-indigo-600 hover:bg-indigo-700"
           )}
         >
-          {isUploading ? "Đang upload..." : "Upload & chèn"}
+          {isUploading ? "Đang tải lên..." : "Tải lên & chèn"}
         </button>
       </div>
       <UploadNotice state={uploadState} />
@@ -507,7 +507,7 @@ function BlockFieldInput({
               disabled={disabled || suggestedAssets.length === 0}
               className="min-w-0 flex-1 rounded-md border border-teal-300 bg-white px-2.5 py-2 text-xs text-slate-800"
             >
-              <option value="">Chọn ảnh từ thư viện...</option>
+            <option value="">Chọn ảnh từ thư viện...</option>
               {suggestedAssets.map((asset) => (
                 <option key={asset.id} value={asset.url}>
                   {asset.title}
@@ -522,9 +522,9 @@ function BlockFieldInput({
                 "inline-flex shrink-0 rounded-md px-3 py-2 text-xs font-semibold text-white",
                 disabled || !selectedAssetUrl ? "cursor-not-allowed bg-slate-400" : "bg-teal-700 hover:bg-teal-800"
               )}
-            >
-              Chèn vào field
-            </button>
+              >
+                Chèn vào trường
+              </button>
           </div>
 
           <MediaUploadControl
@@ -558,6 +558,7 @@ function BlockEditorCard({
   mediaAssets: MediaAssetItem[];
 }) {
   const [state, formAction] = useActionState(updateBlockAction, INITIAL_BLOCKS_ACTION_STATE);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <article
@@ -584,85 +585,97 @@ function BlockEditorCard({
         </span>
       </div>
 
-      <form action={formAction} className="space-y-3">
-        <input type="hidden" name="sectionKey" value={section.key} />
-        <input type="hidden" name="blockKey" value={block.blockKey} />
-        <input type="hidden" name="blockType" value={block.blockType} />
-        <input type="hidden" name="sectionTitleFallback" value={section.title} />
-        <input type="hidden" name="sectionDescriptionFallback" value={section.description} />
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        className="mb-3 inline-flex rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+      >
+        {expanded ? "Thu gọn form chỉnh sửa" : "Mở form chỉnh sửa"}
+      </button>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Tiêu đề khối</span>
-            <input
-              name="title"
-              defaultValue={block.title}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-              disabled={disabled}
-            />
-          </label>
+      {expanded ? (
+        <form action={formAction} className="space-y-3">
+          <input type="hidden" name="sectionKey" value={section.key} />
+          <input type="hidden" name="blockKey" value={block.blockKey} />
+          <input type="hidden" name="blockType" value={block.blockType} />
+          <input type="hidden" name="sectionTitleFallback" value={section.title} />
+          <input type="hidden" name="sectionDescriptionFallback" value={section.description} />
 
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Thứ tự hiển thị</span>
-            <input
-              name="sortOrder"
-              type="number"
-              defaultValue={block.sortOrder}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-              disabled={disabled}
-            />
-          </label>
-        </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Tiêu đề khối</span>
+              <input
+                name="title"
+                defaultValue={block.title}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                disabled={disabled}
+              />
+            </label>
 
-        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-          <input
-            name="isActive"
-            type="checkbox"
-            defaultChecked={block.isActive}
-            className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
-            disabled={disabled}
-          />
-          Hiển thị khối này trên trang công khai
-        </label>
-
-        {block.mode === "template" ? (
-          <div className="grid gap-3">
-            {block.fields.map((field) => (
-              <label key={field.key} className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">{field.label}</span>
-                <BlockFieldInput
-                  field={field}
-                  fieldKeyPrefix={`${section.key}-${block.blockKey}`}
-                  mediaAssets={mediaAssets}
-                  sectionKey={section.key}
-                  sectionName={section.name}
-                  blockKey={block.blockKey}
-                  blockLabel={block.label}
-                  disabled={disabled}
-                />
-                {field.helperText ? <span className="mt-1 block text-xs text-slate-500">{field.helperText}</span> : null}
-              </label>
-            ))}
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Thứ tự hiển thị</span>
+              <input
+                name="sortOrder"
+                type="number"
+                defaultValue={block.sortOrder}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                disabled={disabled}
+              />
+            </label>
           </div>
-        ) : (
-          <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Nội dung JSON</span>
-            <textarea
-              name="content_json"
-              defaultValue={block.rawJson}
-              rows={8}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-xs text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+            <input
+              name="isActive"
+              type="checkbox"
+              defaultChecked={block.isActive}
+              className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
               disabled={disabled}
             />
+            Hiển thị khối này trên trang công khai
           </label>
-        )}
 
-        <div className="flex flex-wrap items-center gap-2">
-          <SubmitButton label="Lưu khối nội dung" disabled={disabled} />
-        </div>
+          {block.mode === "template" ? (
+            <div className="grid gap-3">
+              {block.fields.map((field) => (
+                <label key={field.key} className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">{field.label}</span>
+                  <BlockFieldInput
+                    field={field}
+                    fieldKeyPrefix={`${section.key}-${block.blockKey}`}
+                    mediaAssets={mediaAssets}
+                    sectionKey={section.key}
+                    sectionName={section.name}
+                    blockKey={block.blockKey}
+                    blockLabel={block.label}
+                    disabled={disabled}
+                  />
+                  {field.helperText ? <span className="mt-1 block text-xs text-slate-500">{field.helperText}</span> : null}
+                </label>
+              ))}
+            </div>
+          ) : (
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Nội dung JSON</span>
+              <textarea
+                name="content_json"
+                defaultValue={block.rawJson}
+                rows={8}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-xs text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                disabled={disabled}
+              />
+            </label>
+          )}
 
-        <ActionNotice state={state} />
-      </form>
+          <div className="flex flex-wrap items-center gap-2">
+            <SubmitButton label="Lưu khối nội dung" disabled={disabled} />
+          </div>
+
+          <ActionNotice state={state} />
+        </form>
+      ) : (
+        <p className="text-xs text-slate-500">Nhấn “Mở form chỉnh sửa” để cập nhật nội dung khối.</p>
+      )}
     </article>
   );
 }
@@ -687,6 +700,7 @@ function SectionEditorCard({
   onBlockDrop: (targetBlockKey: string) => void;
 }) {
   const [state, formAction] = useActionState(updateSectionAction, INITIAL_BLOCKS_ACTION_STATE);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <section
@@ -718,68 +732,84 @@ function SectionEditorCard({
         </div>
       </div>
 
-      <form action={formAction} className="space-y-3">
-        <input type="hidden" name="sectionKey" value={section.key} />
+      <button
+        type="button"
+        onClick={() => setExpanded((value) => !value)}
+        className="mb-3 inline-flex rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-white"
+      >
+        {expanded ? "Thu gọn section" : "Mở section để chỉnh sửa"}
+      </button>
 
-        <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Tiêu đề mục</span>
-          <input
-            name="title"
-            defaultValue={section.title}
-            required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-            disabled={disabled}
-          />
-        </label>
+      {expanded ? (
+        <>
+          <form action={formAction} className="space-y-3">
+            <input type="hidden" name="sectionKey" value={section.key} />
 
-        <label className="text-sm">
-          <span className="mb-1 block font-medium text-slate-700">Mô tả mục</span>
-          <textarea
-            name="description"
-            defaultValue={section.description}
-            rows={3}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-            disabled={disabled}
-          />
-        </label>
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Tiêu đề mục</span>
+              <input
+                name="title"
+                defaultValue={section.title}
+                required
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                disabled={disabled}
+              />
+            </label>
 
-        <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-          <input
-            name="isActive"
-            type="checkbox"
-            defaultChecked={section.isActive}
-            className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
-            disabled={disabled}
-          />
-          Hiển thị mục này trên trang công khai
-        </label>
+            <label className="text-sm">
+              <span className="mb-1 block font-medium text-slate-700">Mô tả mục</span>
+              <textarea
+                name="description"
+                defaultValue={section.description}
+                rows={3}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                disabled={disabled}
+              />
+            </label>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <SubmitButton label="Lưu mục nội dung" disabled={disabled} />
-        </div>
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+              <input
+                name="isActive"
+                type="checkbox"
+                defaultChecked={section.isActive}
+                className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
+                disabled={disabled}
+              />
+              Hiển thị mục này trên trang công khai
+            </label>
 
-        <ActionNotice state={state} />
-      </form>
+            <div className="flex flex-wrap items-center gap-2">
+              <SubmitButton label="Lưu mục nội dung" disabled={disabled} />
+            </div>
 
-      {section.blocks.length > 0 ? (
-        <div className="mt-4 grid gap-3">
-          {section.blocks.map((block) => (
-            <BlockEditorCard
-              key={`${section.key}:${block.blockKey}`}
-              section={section}
-              block={block}
-              disabled={disabled}
-              draggable
-              onDragStart={() => onBlockDragStart(block.blockKey)}
-              onDrop={() => onBlockDrop(block.blockKey)}
-              mediaAssets={mediaAssets}
-            />
-          ))}
-        </div>
+            <ActionNotice state={state} />
+          </form>
+
+          {section.blocks.length > 0 ? (
+            <div className="mt-4 grid gap-3">
+              {section.blocks.map((block) => (
+                <BlockEditorCard
+                  key={`${section.key}:${block.blockKey}`}
+                  section={section}
+                  block={block}
+                  disabled={disabled}
+                  draggable
+                  onDragStart={() => onBlockDragStart(block.blockKey)}
+                  onDrop={() => onBlockDrop(block.blockKey)}
+                  mediaAssets={mediaAssets}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600">
+              Mục này hiện chưa có khối nội dung con.
+            </div>
+          )}
+        </>
       ) : (
-        <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-sm text-slate-600">
-          Mục này hiện chưa có khối nội dung con.
-        </div>
+        <p className="text-xs text-slate-500">
+          Nhấn “Mở section để chỉnh sửa” để thao tác nhanh, giảm rối khi trang có nhiều block.
+        </p>
       )}
     </section>
   );
@@ -799,7 +829,10 @@ export function AdminBlocksEditor({
   const [dragSectionKey, setDragSectionKey] = useState<string | null>(null);
   const [dragBlock, setDragBlock] = useState<{ sectionKey: string; blockKey: string } | null>(null);
   const [previewVersion, setPreviewVersion] = useState(1);
+  const [keyword, setKeyword] = useState("");
   const previewHref = `${previewPath}${previewPath.includes("?") ? "&" : "?"}preview=${previewVersion}`;
+  const normalizedKeyword = normalizeText(keyword.trim());
+  const dragEnabled = normalizedKeyword.length === 0;
 
   const layoutJson = useMemo(
     () =>
@@ -811,6 +844,37 @@ export function AdminBlocksEditor({
       ),
     [editorSections]
   );
+
+  const visibleSections = useMemo(() => {
+    if (!normalizedKeyword) {
+      return editorSections;
+    }
+
+    return editorSections
+      .map((section) => {
+        const sectionText = normalizeText(
+          `${section.name} ${section.title} ${section.description} ${section.key}`.trim()
+        );
+        const sectionMatched = sectionText.includes(normalizedKeyword);
+
+        if (sectionMatched) {
+          return section;
+        }
+
+        const matchedBlocks = section.blocks.filter((block) => {
+          const blockText = normalizeText(
+            `${block.label} ${block.title} ${block.blockKey} ${block.blockType}`.trim()
+          );
+          return blockText.includes(normalizedKeyword);
+        });
+
+        return {
+          ...section,
+          blocks: matchedBlocks
+        };
+      })
+      .filter((section) => section.blocks.length > 0);
+  }, [editorSections, normalizedKeyword]);
 
   function applySectionReorder(sourceSectionKey: string, targetSectionKey: string) {
     if (sourceSectionKey === targetSectionKey) {
@@ -860,7 +924,19 @@ export function AdminBlocksEditor({
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <h3 className="text-sm font-semibold text-slate-900">Chon trang can chinh sua</h3>
+        <h3 className="text-sm font-semibold text-slate-900">Chọn trang cần chỉnh sửa</h3>
+        <p className="mt-1 text-xs text-slate-500">
+          Có thể tìm nhanh theo tên section/block để thao tác gọn hơn.
+        </p>
+        <label className="mt-3 block text-sm">
+          <span className="mb-1 block font-medium text-slate-700">Tìm section hoặc block</span>
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="Ví dụ: Hero, Bảng giá, FAQ..."
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+          />
+        </label>
         <div className="mt-3 flex flex-wrap gap-2">
           {builderPages.map((page) => {
             const active = page.key === currentPageKey;
@@ -895,6 +971,11 @@ export function AdminBlocksEditor({
             <p className="mt-1 text-xs text-indigo-800">
               Kéo section hoặc block để đổi vị trí. Mỗi field ảnh trong block đều hỗ trợ chọn ảnh từ thư viện hoặc upload trực tiếp.
             </p>
+            {!dragEnabled ? (
+              <p className="mt-1 text-xs font-medium text-amber-700">
+                Đang bật bộ lọc tìm kiếm nên tạm khóa kéo-thả. Xóa ô tìm kiếm để kéo-thả lại.
+              </p>
+            ) : null}
 
             <form action={layoutAction} className="mt-3 flex flex-wrap items-center gap-2">
               <input type="hidden" name="layout_json" value={layoutJson} />
@@ -916,17 +997,21 @@ export function AdminBlocksEditor({
 
           {editorSections.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-sm text-slate-600">
-              Trang nay chua co section. Ban co the tao section/block moi theo page key trong SQL, sau do quay lai de
-              keo-tha.
+              Trang này chưa có section. Bạn có thể tạo section/block mới theo page key trong SQL, sau đó quay lại để
+              kéo-thả.
+            </div>
+          ) : visibleSections.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-sm text-slate-600">
+              Không tìm thấy section/block phù hợp với từ khóa hiện tại.
             </div>
           ) : (
-            editorSections.map((section) => (
+            visibleSections.map((section) => (
               <SectionEditorCard
                 key={section.key}
                 section={section}
                 disabled={!databaseReady}
                 mediaAssets={mediaAssets}
-                draggable
+                draggable={dragEnabled}
                 onDragStart={() => {
                   setDragSectionKey(section.key);
                   setDragBlock(null);
@@ -957,13 +1042,13 @@ export function AdminBlocksEditor({
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-slate-900">Preview trang da chon</h3>
+              <h3 className="text-sm font-semibold text-slate-900">Xem trước trang đã chọn</h3>
               <Link href={previewHref} target="_blank" className="text-xs font-semibold text-teal-700 hover:underline">
                 Mở tab mới
               </Link>
             </div>
             <div className="overflow-hidden rounded-xl border border-slate-200">
-              <iframe title="Landing Page Preview" src={previewHref} className="h-[70vh] w-full bg-white" />
+              <iframe title="Xem trước landing page" src={previewHref} className="h-[70vh] w-full bg-white" />
             </div>
           </div>
         </div>

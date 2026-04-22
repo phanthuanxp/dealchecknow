@@ -365,10 +365,10 @@ export default async function AdminBlocksPage({ searchParams }: AdminBlocksPageP
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Landing Editor theo tung trang</h1>
+        <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Trình chỉnh sửa landing page theo từng trang</h1>
         <p className="mt-2 text-sm text-slate-600">
-          Chon trang can sua, sau do keo tha section/block va cap nhat noi dung truc tiep. Du lieu luu trong SQL theo
-          tenant hien tai.
+          Chọn trang cần sửa, sau đó kéo thả section/block và cập nhật nội dung trực tiếp. Dữ liệu lưu trong SQL theo
+          tenant hiện tại.
         </p>
       </section>
 

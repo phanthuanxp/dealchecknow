@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -135,6 +135,7 @@ function MediaEditCard({ item, disabled }: { item: MediaItem; disabled: boolean 
     INITIAL_MEDIA_ACTION_STATE
   );
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   async function copyUrl() {
     try {
@@ -159,7 +160,7 @@ function MediaEditCard({ item, disabled }: { item: MediaItem; disabled: boolean 
             onClick={copyUrl}
             className="mt-2 inline-flex rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
           >
-            {copied ? "Đã copy URL" : "Copy URL"}
+            {copied ? "Đã sao chép URL" : "Sao chép URL"}
           </button>
         </div>
 
@@ -182,109 +183,121 @@ function MediaEditCard({ item, disabled }: { item: MediaItem; disabled: boolean 
             </span>
           </div>
 
-          <form action={updateAction} className="space-y-3">
-            <input type="hidden" name="id" value={item.id} />
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            className="mb-3 inline-flex rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            {expanded ? "Thu gọn form chỉnh sửa" : "Mở form chỉnh sửa"}
+          </button>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+          {expanded ? (
+            <form action={updateAction} className="space-y-3">
+              <input type="hidden" name="id" value={item.id} />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Tiêu đề</span>
+                  <input
+                    name="title"
+                    defaultValue={item.title}
+                    required
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
+
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Mã ảnh</span>
+                  <input
+                    name="code"
+                    defaultValue={item.code}
+                    required
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
+              </div>
+
               <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Tiêu đề</span>
+                <span className="mb-1 block font-medium text-slate-700">URL ảnh</span>
                 <input
-                  name="title"
-                  defaultValue={item.title}
+                  name="url"
+                  type="text"
+                  defaultValue={item.url}
                   required
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
                 />
               </label>
 
               <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Mã ảnh</span>
+                <span className="mb-1 block font-medium text-slate-700">Văn bản ALT</span>
                 <input
-                  name="code"
-                  defaultValue={item.code}
-                  required
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-                />
-              </label>
-            </div>
-
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">URL ảnh</span>
-              <input
-                name="url"
-                type="text"
-                defaultValue={item.url}
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-              />
-            </label>
-
-            <label className="text-sm">
-              <span className="mb-1 block font-medium text-slate-700">Alt text</span>
-              <input
-                name="altText"
-                defaultValue={item.altText ?? ""}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-              />
-            </label>
-
-            <div className="grid gap-3 sm:grid-cols-4">
-              <label className="text-sm sm:col-span-2">
-                <span className="mb-1 block font-medium text-slate-700">Nhóm ảnh</span>
-                <input
-                  name="groupKey"
-                  defaultValue={item.groupKey}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-                />
-              </label>
-
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Thứ tự</span>
-                <input
-                  name="sortOrder"
-                  type="number"
-                  defaultValue={item.sortOrder}
+                  name="altText"
+                  defaultValue={item.altText ?? ""}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
                 />
               </label>
 
-              <label className="inline-flex items-center gap-2 self-end rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
-                <input
-                  name="isActive"
-                  type="checkbox"
-                  defaultChecked={item.isActive}
-                  className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
-                />
-                Hoạt động
-              </label>
-            </div>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <label className="text-sm sm:col-span-2">
+                  <span className="mb-1 block font-medium text-slate-700">Nhóm ảnh</span>
+                  <input
+                    name="groupKey"
+                    defaultValue={item.groupKey}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 font-mono text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Chiều rộng (tuỳ chọn)</span>
-                <input
-                  name="width"
-                  type="number"
-                  defaultValue={item.width ?? ""}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-                />
-              </label>
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Thứ tự</span>
+                  <input
+                    name="sortOrder"
+                    type="number"
+                    defaultValue={item.sortOrder}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
 
-              <label className="text-sm">
-                <span className="mb-1 block font-medium text-slate-700">Chiều cao (tuỳ chọn)</span>
-                <input
-                  name="height"
-                  type="number"
-                  defaultValue={item.height ?? ""}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
-                />
-              </label>
-            </div>
+                <label className="inline-flex items-center gap-2 self-end rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700">
+                  <input
+                    name="isActive"
+                    type="checkbox"
+                    defaultChecked={item.isActive}
+                    className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-500"
+                  />
+                  Hoạt động
+                </label>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <SubmitButton label="Lưu ảnh" disabled={disabled} />
-            </div>
-            <ActionNotice state={updateState} />
-          </form>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Chiều rộng (tuỳ chọn)</span>
+                  <input
+                    name="width"
+                    type="number"
+                    defaultValue={item.width ?? ""}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
+
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-slate-700">Chiều cao (tuỳ chọn)</span>
+                  <input
+                    name="height"
+                    type="number"
+                    defaultValue={item.height ?? ""}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+                  />
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <SubmitButton label="Lưu ảnh" disabled={disabled} />
+              </div>
+              <ActionNotice state={updateState} />
+            </form>
+          ) : (
+            <p className="text-xs text-slate-500">Nhấn “Mở form chỉnh sửa” để sửa nhanh thông tin ảnh.</p>
+          )}
 
           <form action={deleteAction} className="mt-3">
             <input type="hidden" name="id" value={item.id} />
@@ -304,7 +317,19 @@ export function AdminMediaManager({ items, databaseReady }: AdminMediaManagerPro
   );
   const [isUploading, setIsUploading] = useState(false);
   const [uploadState, setUploadState] = useState<UploadState>(INITIAL_UPLOAD_STATE);
+  const [keyword, setKeyword] = useState("");
   const router = useRouter();
+  const normalizedKeyword = keyword.trim().toLowerCase();
+
+  const filteredItems = useMemo(() => {
+    if (!normalizedKeyword) {
+      return items;
+    }
+
+    return items.filter((item) =>
+      `${item.title} ${item.code} ${item.groupKey} ${item.altText ?? ""}`.toLowerCase().includes(normalizedKeyword)
+    );
+  }, [items, normalizedKeyword]);
 
   async function handleDirectUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -416,10 +441,10 @@ export function AdminMediaManager({ items, databaseReady }: AdminMediaManagerPro
           </div>
 
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Alt text</span>
+            <span className="mb-1 block font-medium text-slate-700">Văn bản ALT</span>
             <input
               name="altText"
-              placeholder="Mô tả ảnh cho SEO và accessibility"
+              placeholder="Mô tả ảnh cho SEO và khả năng truy cập"
               disabled={!databaseReady || isUploading}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:bg-slate-100"
             />
@@ -478,7 +503,7 @@ export function AdminMediaManager({ items, databaseReady }: AdminMediaManagerPro
                 : "bg-indigo-600 hover:bg-indigo-700"
             )}
           >
-            {isUploading ? "Đang upload..." : "Upload ảnh trực tiếp"}
+            {isUploading ? "Đang tải lên..." : "Tải ảnh trực tiếp"}
           </button>
 
           <p className="text-xs text-slate-500">
@@ -525,10 +550,10 @@ export function AdminMediaManager({ items, databaseReady }: AdminMediaManagerPro
           </label>
 
           <label className="text-sm">
-            <span className="mb-1 block font-medium text-slate-700">Alt text</span>
+            <span className="mb-1 block font-medium text-slate-700">Văn bản ALT</span>
             <input
               name="altText"
-              placeholder="Mô tả ảnh cho SEO và accessibility"
+              placeholder="Mô tả ảnh cho SEO và khả năng truy cập"
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
             />
           </label>
@@ -591,12 +616,28 @@ export function AdminMediaManager({ items, databaseReady }: AdminMediaManagerPro
       </section>
 
       <section className="space-y-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <label className="text-sm">
+            <span className="mb-1 block font-medium text-slate-700">Tìm ảnh nhanh</span>
+            <input
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder="Tìm theo tiêu đề, mã ảnh, nhóm ảnh..."
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-teal-600 focus:ring-2 focus:ring-teal-200"
+            />
+          </label>
+        </div>
+
         {items.length === 0 ? (
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
             Chưa có ảnh nào trong thư viện.
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+            Không tìm thấy ảnh phù hợp với từ khóa hiện tại.
+          </div>
         ) : (
-          items.map((item) => (
+          filteredItems.map((item) => (
             <MediaEditCard key={item.id} item={item} disabled={!databaseReady} />
           ))
         )}

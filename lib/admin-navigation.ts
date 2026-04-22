@@ -6,58 +6,58 @@ export type AdminNavItem = {
 
 export const adminNavItems: AdminNavItem[] = [
   {
-    label: "Tong quan",
+    label: "Tổng quan",
     href: "/admincp",
-    description: "Bang dieu khien"
+    description: "Bảng điều khiển"
   },
   {
-    label: "Bai viet",
+    label: "Bài viết",
     href: "/admincp/blog",
-    description: "Quan ly bai viet"
+    description: "Quản lý bài viết"
   },
   {
-    label: "Danh muc",
+    label: "Danh mục",
     href: "/admincp/categories",
-    description: "Phan loai bai viet"
+    description: "Phân loại bài viết"
   },
   {
-    label: "Yeu cau bao gia",
+    label: "Yêu cầu báo giá",
     href: "/admincp/leads",
-    description: "Quan ly khach lien he"
+    description: "Quản lý khách liên hệ"
   },
   {
-    label: "Khoi noi dung",
+    label: "Khối nội dung",
     href: "/admincp/blocks",
-    description: "Noi dung trang chu va page"
+    description: "Nội dung trang chủ và page"
   },
   {
-    label: "Thu vien anh",
+    label: "Thư viện ảnh",
     href: "/admincp/media",
-    description: "Banner va anh dich vu"
+    description: "Banner và ảnh dịch vụ"
   },
   {
-    label: "Hoi dap",
+    label: "Hỏi đáp",
     href: "/admincp/faq",
-    description: "Cau hoi thuong gap"
+    description: "Câu hỏi thường gặp"
   },
   {
-    label: "Bang gia",
+    label: "Bảng giá",
     href: "/admincp/pricing",
-    description: "Tuyen va gia"
+    description: "Tuyến và giá"
   },
   {
-    label: "Dich vu SEO",
+    label: "Dịch vụ SEO",
     href: "/admincp/services",
-    description: "Trang dich vu dong"
+    description: "Trang dịch vụ động"
   },
   {
-    label: "Danh gia",
+    label: "Đánh giá",
     href: "/admincp/testimonials",
-    description: "Phan hoi khach hang"
+    description: "Phản hồi khách hàng"
   },
   {
-    label: "Cai dat",
+    label: "Cài đặt",
     href: "/admincp/settings",
-    description: "Thiet lap he thong"
+    description: "Thiết lập hệ thống"
   }
 ];
